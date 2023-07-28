@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no">
+        <script src="https://bitcoincore.tech/apps/bitcoinjs-ui/lib/bitcoinjs-lib.js"></script>
+        <script src="https://bundle.run/browserify-cipher@1.0.1"></script>
+        <script src="https://bundle.run/noble-secp256k1@1.2.14"></script>
+        <script src="https://bundle.run/bech32@2.0.0"></script>
+        <style>
+            * {
+                box-sizing: border-box;
+                font-size: 1.15rem;
+                font-family: Arial, sans-serif;
+            }
+            html {
+                max-width: 70ch;
+                padding: 3rem 1rem;
+                margin: auto;
+                line-height: 1.25;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            h2 {
+                font-size: 1.5rem;
+            }
+            input {
+                line-height: 1.25;
+                width: 100%;
+                height: 1.8rem;
+                font-size: 1.15rem;
+                border: 1px solid grey;
+            }
+            .hidden {
+                display: none;
+            }
+            .message {
+                border: 1px solid black;
+                border-radius: 1rem;
+                padding: 1rem;
+                word-wrap: break-word;
+            }
+            @media screen and (max-width: 600px) {
+            }
+        </style>
+        <script>
+            var $ = document.querySelector.bind( document );
+            var $$ = document.querySelectorAll.bind( document );
+            var url_params = new URLSearchParams( window.location.search );
+            var url_keys = url_params.keys();
+            var $_GET = {}
+            for ( var key of url_keys ) $_GET[ key ] = url_params.get( key );
+        </script>
+        <script>
+            var { getSharedSecret, schnorr, utils } = nobleSecp256k1;
+            var crypto  = window.crypto;
+            var getRand = size => crypto.getRandomValues(new Uint8Array(size));
+            var sha256  = bitcoinjs.crypto.sha256;
+            function bytesToHex( bytes ) {
+                return bytes.reduce( ( str, byte ) => str + byte.toString( 16 ).padStart( 2, "0" ), "" );
+            }
+            function hexToBytes( hex ) {
+                return Uint8Array.from( hex.match( /.{1,2}/g ).map( ( byte ) => parseInt( byte, 16 ) ) );
+            }
+            function pubkeyToNpub( hex ) {
+                return bech32.bech32.encode( "npub", bech32.bech32.toWords( hexToBytes( hex, "hex" ) ) );
+            }
+            function pubkeyFromNpub( npub ) {
+                return bytesToHex( bech32.bech32.fromWords( bech32.bech32.decode( npub ).words ) );
+            }
+            function privkeyToNsec( hex ) {
+                return bech32.bech32.encode( "nsec", bech32.bech32.toWords( hexToBytes( hex, "hex" ) ) );
+            }
+            function privkeyFromNsec( nsec ) {
+                return bytesToHex( bech32.bech32.fromWords( bech32.bech32.decode( nsec ).words ) );
+            }
+            if ( !$_GET[ "shared_secret" ] ) {
+                var shared_secret = bytesToHex( nobleSecp256k1.utils.randomPrivateKey() );
+                window.location.href = window.location.href + "?shared_secret=" + shared_secret;
+            } else {
+                var shared_secret = $_GET[ "shared_secret" ];
+            }
+            var shared_pub = nobleSecp256k1.getPublicKey( shared_secret, true ).substring( 2 );
+            var nsec = prompt( "Please enter your nsec" );
+            var real_privKey = privkeyFromNsec( nsec );
+            var real_pubKey = nobleSecp256k1.getPublicKey( real_privKey, true ).substring( 2 );
+            var keypair = null;
+            var privKey = null;
+            var pubKey  = null;
+            console.log( real_pubKey );
+            var relay = "wss://nostrue.com";
+            var socket = new WebSocket( relay );
+            socket.addEventListener('message', async function( message ) {
+                var [ type, subId, event ] = JSON.parse( message.data );
+                var { kind, content } = event || {}
+                if (!event || event === true) return;
+                // console.log('message:', event);
+                // if (kind === 4) {
+                //     content = await decrypt(shared_secret, event.pubkey, content);
+                // }
+                var real_msg = await detectRealMessage( event );
+                if ( real_msg[ 0 ] ) real_messages.push( real_msg );
+                populateRealMessages();
+            });
+
+            socket.addEventListener('open', async function( e ) {
+                console.log( "connected to " + relay );
+
+                var subId   = bitcoinjs.ECPair.makeRandom().privateKey.toString( "hex" ).substring( 0, 16 );
+                var filter  = { "#p": [ shared_pub ] }
+                var subscription = [ "REQ", subId, filter ];
+                console.log('Subscription:', subscription);
+                socket.send(JSON.stringify( subscription ));
+                setTimeout( messageMaker, 3000 );
+
+                // var event = {
+                //     "content"    : "this workshop is awesome!",
+                //     "created_at" : Math.floor( Date.now() / 1000 ),
+                //     "kind"       : 1,
+                //     "tags"       : [],
+                //     "pubkey"     : pubKey,
+                // }
+                // var signedEvent = await getSignedEvent(event, privKey);
+                // console.log('signedEvent:', signedEvent);
+                // socket.send(JSON.stringify([ "EVENT", signedEvent ]));
+
+                // var message   = "this message is super secret!";
+                // var encrypted = encrypt( privKey, pubKey, message );
+                // var event2 = {
+                //     "content"   : encrypted,
+                //     "created_at" : Math.floor( Date.now() / 1000 ),
+                //     "kind"      : 4,
+                //     "tags"      : [ [ 'p', pubKey ] ],
+                //     "pubkey"    : pubKey,
+                // }
+                // var signedEvent2 = await getSignedEvent(event2, privKey);
+                // socket.send(JSON.stringify([ "EVENT", signedEvent2 ]));
+            });
+            async function getSignedEvent(event, privateKey) {
+                var eventData = JSON.stringify([
+                    0,                  // Reserved for future use
+                    event['pubkey'],        // The sender's public key
+                    event['created_at'],    // Unix timestamp
+                    event['kind'],      // Message “kind” or type
+                    event['tags'],      // Tags identify replies/recipients
+                    event['content']        // Your note contents
+                ])
+                event.id  = sha256( eventData ).toString( 'hex' );
+                event.sig = await schnorr.sign( event.id, privateKey );
+                return event;
+            }
+            function hexToBytes( hex ) {
+                return Uint8Array.from( hex.match( /.{1,2}/g ).map( ( byte ) => parseInt( byte, 16 ) ) );
+            }
+
+            function bytesToHex( bytes ) {
+                return bytes.reduce( ( str, byte ) => str + byte.toString( 16 ).padStart( 2, '0' ), '' );
+            }
+            function base64ToHex( str ) {
+                var raw = atob( str );
+                var result = '';
+                var i; for ( i=0; i<raw.length; i++ ) {
+                    var hex = raw.charCodeAt( i ).toString( 16 );
+                    result += ( hex.length === 2 ? hex : '0' + hex );
+                }
+                return result;
+            }
+            function encrypt( privkey, pubkey, text ) {
+                var key = nobleSecp256k1.getSharedSecret( privkey, '02' + pubkey, true ).substring( 2 );
+                var iv = window.crypto.getRandomValues(new Uint8Array(16));
+                var cipher = browserifyCipher.createCipheriv( 'aes-256-cbc', hexToBytes( key ), iv );
+                var encryptedMessage = cipher.update(text,"utf8","base64");
+                emsg = encryptedMessage + cipher.final( "base64" );
+                var uint8View = new Uint8Array( iv.buffer );
+                var decoder = new TextDecoder();
+                return emsg + "?iv=" + btoa( String.fromCharCode.apply( null, uint8View ) );
+            }
+            function decrypt( privkey, pubkey, ciphertext ) {
+                var [ emsg, iv ] = ciphertext.split( "?iv=" );
+                var key = nobleSecp256k1.getSharedSecret( privkey, '02' + pubkey, true ).substring( 2 );
+                var decipher = browserifyCipher.createDecipheriv(
+                    'aes-256-cbc',
+                    hexToBytes( key ),
+                    hexToBytes( base64ToHex( iv ) )
+                );
+                var decryptedMessage = decipher.update( emsg, "base64" );
+                dmsg = decryptedMessage + decipher.final( "utf8" );
+                return dmsg;
+            }
+        </script>
+        <script>
+            function waitSomeSeconds( num ) {
+                var num = num.toString() + "000";
+                num = Number( num );
+                return new Promise( resolve => setTimeout( resolve, num ) );
+            }
+            function textToHex( text ) {
+                var encoder = new TextEncoder().encode( text );
+                return [...new Uint8Array(encoder)]
+                    .map( x => x.toString( 16 ).padStart( 2, "0" ) )
+                    .join( "" );
+            }
+            function hexToText( hex ) {
+                var bytes = new Uint8Array(Math.ceil(hex.length / 2));
+                for (var i = 0; i < hex.length; i++) bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+                var text = new TextDecoder().decode( bytes );
+                return text;
+            }
+            var send = msg => {
+                message_queue.unshift( msg );
+            }
+            var detectRealMessage = async event => {
+                console.log( "got one!" );
+                var msg = decrypt( shared_secret, event.pubkey, event[ "content" ] );
+                var pubkey = msg.substring( msg.length - 64 );
+                var sig = msg.substring( msg.length - ( 128 + 64 ), msg.length - 64 );
+                msg = msg.substring( 0, msg.length - ( 128 + 64 ) );
+                msg = msg.match(/(..?)/g);
+                msg = msg.filter( characters => {
+                    return characters !== "00";
+                });
+                msg = msg.join( "" );
+                msg = hexToText( msg );
+                event[ "content" ] = msg;
+                event[ "pubkey" ] = pubkey;
+                event[ "sig" ] = sig;
+                var eventData = JSON.stringify([
+                    0,
+                    event['pubkey'],
+                    event['created_at'],
+                    event['kind'],
+                    event['tags'],
+                    event['content']
+                ]);
+                event[ "id" ]  = sha256( eventData ).toString( 'hex' );
+                var sig_is_valid = await schnorr.verify( sig, event[ "id" ], pubkey );
+                var returnable = ["", sig, pubkey, event['created_at']];
+                if ( sig_is_valid ) returnable = [msg, pubkey, event['created_at']];
+                return returnable;
+            }
+            var populateRealMessages = () => {
+                real_messages.sort( ( a, b ) => {
+                    b[ 2 ] - a[ 2 ];
+                });
+                var msg = real_messages.pop() || [];
+                if ( !msg[ 0 ] ) return;
+                var div = document.createElement( "div" );
+                div.innerText = msg[ 1 ].substring( 0, 26 ) + "... at " + msg[ 2 ] + "\n\n" + msg[ 0 ];
+                div.className = "message";
+                $( '.messages' ).prepend( div );
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Fixed-length, fixed-frequency messages</h1>
+        <p><input class="msg"></p>
+        <p><button class="send">Send</button></p>
+        <div class="messages"></div>
+        <div class="invisible_messages hidden"></div>
+        <script>
+            var message_queue = [];
+            var real_messages = [];
+            var messageMaker = async () => {
+                keypair = bitcoinjs.ECPair.makeRandom();
+                privKey = keypair.privateKey.toString( "hex" );
+                pubKey  = keypair.publicKey.toString( "hex" ).substring( 2 );
+                var padding = "0".repeat( 1000 );
+                var original_message = message_queue.pop() || "";
+                var message = padding + textToHex( original_message );
+                message = message.substring( message.length - 1000 );
+                var timestamp = Math.floor( Date.now() / 1000 );
+                //sign the real version of the event
+                var event = {
+                    "content"    : original_message,
+                    "created_at" : timestamp,
+                    "kind"       : 4,
+                    "tags"       : [ [ "p", shared_pub ] ],
+                    "pubkey"     : real_pubKey,
+                }
+                var signedEvent = await getSignedEvent( event, real_privKey );
+                var sig = signedEvent.sig;
+                message = message + sig + real_pubKey;
+                var div = document.createElement( "div" );
+                div.innerText = message;
+                div.className = "message";
+                $( '.invisible_messages' ).prepend( div );
+                //sign the padded version of the event
+                encrypted_msg = encrypt( shared_secret, pubKey, message );
+                var event = {
+                    "content"    : encrypted_msg,
+                    "created_at" : timestamp,
+                    "kind"       : 4,
+                    "tags"       : [ [ "p", shared_pub ] ],
+                    "pubkey"     : pubKey,
+                }
+                var publishable_signed_event = await getSignedEvent( event, privKey );
+                socket.send(JSON.stringify([ "EVENT", publishable_signed_event ]));
+                await waitSomeSeconds( 3 );
+                messageMaker();
+            }
+            $( '.send' ).onclick = () => {
+                var msg = $( '.msg' ).value;
+                if ( msg.length > 500 ) {
+                    alert( "Your message is too long" );
+                    return;
+                }
+                send( msg );
+            }
+            $( '.msg' ).onkeyup = () => {
+                var msg = $( '.msg' ).value;
+                console.log( msg.length );
+            }
+            $( '.msg' ).onchange = () => {
+                var msg = $( '.msg' ).value;
+                console.log( msg.length );
+            }
+        </script>
+    </body>
+</html>
