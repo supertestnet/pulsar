@@ -79,15 +79,15 @@
                 //     content = await decrypt(shared_secret, event.pubkey, content);
                 // }
                 var real_msg = await detectRealMessage( event );
-                if ( !real_msg[ 0 ] ) return;
                 if ( displayed_msgs.includes( event.id ) ) return;
                 displayed_msgs.push( event.id );
-                real_messages.push( real_msg );
-                populateRealMessages();
+                if ( real_msg[ 0 ] ) real_messages.push( real_msg );
+                if ( real_msg[ 0 ] ) populateRealMessages();
                 if ( !subId.startsWith( "00000001" ) ) return;
                 num_of_messages = num_of_messages + 1;
                 timestamp_of_oldest_message = event.created_at;
-                if ( num_of_messages < 50 ) return;
+                if ( num_of_messages < 45 ) return;
+                console.log( "going up" );
                 num_of_messages = 0;
                 var subId   = "00000001" + bitcoinjs.ECPair.makeRandom().privateKey.toString( "hex" ).substring( 0, 8 );
                 var filter  = { "#p": [ shared_pub ], until: timestamp_of_oldest_message, limit: 50 }
@@ -96,12 +96,12 @@
             });
 
             async function openConnection( e ) {
-                console.log( "connected to " + relay );
                 if ( !shared_pub ) {
                     await waitSomeSeconds( 1 );
                     openConnection( e );
                     return;
                 }
+                console.log( "connected to " + relay );
                 var now = Math.floor( Date.now() / 1000 );
                 var subId   = "00000000" + bitcoinjs.ECPair.makeRandom().privateKey.toString( "hex" ).substring( 0, 8 );
                 var filter  = { "#p": [ shared_pub ], since: now }
@@ -193,7 +193,6 @@
                 var second_part = roundToOneFourOrSeven( Number( second_part ) );
                 now = Number( first_part + String( second_part ) );
                 message_queue.unshift( [ msg, now ] );
-                console.log( "sending:", true, msg, now )
                 messageMaker( true, msg, now );
             }
             var detectRealMessage = async event => {
