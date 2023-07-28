@@ -3,47 +3,14 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, user-scalable=no">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch&family=Source+Code+Pro&family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="index.css">
         <script src="https://bitcoincore.tech/apps/bitcoinjs-ui/lib/bitcoinjs-lib.js"></script>
         <script src="https://bundle.run/browserify-cipher@1.0.1"></script>
         <script src="https://bundle.run/noble-secp256k1@1.2.14"></script>
         <script src="https://bundle.run/bech32@2.0.0"></script>
-        <style>
-            * {
-                box-sizing: border-box;
-                font-size: 1.15rem;
-                font-family: Arial, sans-serif;
-            }
-            html {
-                max-width: 70ch;
-                padding: 3rem 1rem;
-                margin: auto;
-                line-height: 1.25;
-            }
-            h1 {
-                font-size: 2rem;
-            }
-            h2 {
-                font-size: 1.5rem;
-            }
-            input {
-                line-height: 1.25;
-                width: 100%;
-                height: 1.8rem;
-                font-size: 1.15rem;
-                border: 1px solid grey;
-            }
-            .hidden {
-                display: none;
-            }
-            .message {
-                border: 1px solid black;
-                border-radius: 1rem;
-                padding: 1rem;
-                word-wrap: break-word;
-            }
-            @media screen and (max-width: 600px) {
-            }
-        </style>
         <script>
             var $ = document.querySelector.bind( document );
             var $$ = document.querySelectorAll.bind( document );
@@ -82,7 +49,8 @@
                 var shared_secret = $_GET[ "shared_secret" ];
             }
             var shared_pub = nobleSecp256k1.getPublicKey( shared_secret, true ).substring( 2 );
-            var nsec = prompt( "Please enter your nsec" );
+            var nsec = 'nsec13qd2fgv8f6kdvmm3qshahuptgkkukqagnzwqurphy9kp5zxst37ss3dt74'
+            // prompt( "Please enter your nsec" );
             var real_privKey = privkeyFromNsec( nsec );
             var real_pubKey = nobleSecp256k1.getPublicKey( real_privKey, true ).substring( 2 );
             var keypair = null;
@@ -247,15 +215,21 @@
                 if ( !msg[ 0 ] ) return;
                 var div = document.createElement( "div" );
                 div.innerText = msg[ 1 ].substring( 0, 26 ) + "... at " + msg[ 2 ] + "\n\n" + msg[ 0 ];
-                div.className = "message";
+                if (msg[1] == real_pubKey) {
+                    div.classList.add("user-message");
+                } else {
+                    div.classList.add("peer-message");
+                }
                 $( '.messages' ).prepend( div );
             }
         </script>
     </head>
     <body>
-        <h1>Fixed-length, fixed-frequency messages</h1>
+        <h1>Pulsar</h1>
         <p><input class="msg"></p>
-        <p><button class="send">Send</button></p>
+        <div class="button-row">
+            <button class="send">Send</button>
+        </div>
         <div class="messages"></div>
         <div class="invisible_messages hidden"></div>
         <script>
