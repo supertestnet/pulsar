@@ -304,8 +304,10 @@
         <div class="chat_string">
             <p>Enter your chat string</p>
             <p><input class="shared_secret"></p>
-            <p>Enter your nsec</p>
-            <p><input class="nsec"></p>
+            <div class="nsec_div">
+                <p>Enter your nsec</p>
+                <p><input class="nsec"></p>
+            </div>
             <div class="button-row">
                 <button class="submit">Submit</button>
             </div>
@@ -319,6 +321,14 @@
             <div class="invisible_messages hidden"></div>
         </div>
         <script>
+            window.onload = async () => {
+                if ( window.nostr ) {
+                    $( '.nsec_div' ).classList.add( "hidden" );
+                    var pk = await window.nostr.getPublicKey();
+                    console.log( "pk:", pk );
+                    real_pubKey = pk;
+                }
+            }
             var messageMaker = async ( once, msg, timestamp ) => {
                 if ( !shared_secret ) {
                     await waitSomeSeconds( 1 );
@@ -352,7 +362,16 @@
                     "tags"       : [ [ "p", shared_pub ] ],
                     "pubkey"     : real_pubKey,
                 }
-                var signedEvent = await getSignedEvent( event, real_privKey );
+                if ( window.nostr ) {
+                    var signedEvent = await window.nostr.signEvent( event );
+                    if ( typeof( signedEvent ) == "string" ) {
+                        event.sig = signedEvent;
+                    } else {
+                        event.sig = signedEvent.sig;
+                    }
+                } else {
+                    var signedEvent = await getSignedEvent( event, real_privKey );
+                }
                 var sig = signedEvent.sig;
                 message = message + sig + real_pubKey;
                 var div = document.createElement( "div" );
@@ -389,11 +408,12 @@
             $( '.submit' ).onclick = () => {
                 shared_secret = $( '.shared_secret' ).value;
                 shared_pub = nobleSecp256k1.getPublicKey( shared_secret, true ).substring( 2 );
+                $( '.chat_string' ).classList.add( "hidden" );
+                $( '.messenger' ).classList.remove( "hidden" );
+                if ( window.nostr ) return;
                 nsec = $( '.nsec' ).value;
                 real_privKey = privkeyFromNsec( nsec );
                 real_pubKey = nobleSecp256k1.getPublicKey( real_privKey, true ).substring( 2 );
-                $( '.chat_string' ).classList.add( "hidden" );
-                $( '.messenger' ).classList.remove( "hidden" );
                 console.log( real_pubKey );
             }
             $( '.send' ).onclick = () => {
