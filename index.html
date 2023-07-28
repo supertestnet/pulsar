@@ -226,8 +226,7 @@
             }
             var populateRealMessages = () => {
                 real_messages.sort( ( a, b ) => {
-                    if ( b[ 2 ] > a[ 2 ] ) return -1;
-                    return 1;
+                    return b[ 2 ] - a[ 2 ] );
                 });
                 $( '.messages' ).innerHTML = ``;
                 real_messages.forEach( msg => {
