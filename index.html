@@ -309,6 +309,8 @@
                 <p><input class="nsec"></p>
             </div>
             <div class="button-row">
+                <button class="gen_nsec">Generate nsec</button>
+                &nbsp;&nbsp;
                 <button class="submit">Submit</button>
             </div>
         </div>
@@ -324,6 +326,7 @@
             window.onload = async () => {
                 if ( window.nostr ) {
                     $( '.nsec_div' ).classList.add( "hidden" );
+                    $( '.gen_nsec' ).classList.add( "hidden" );
                     var pk = await window.nostr.getPublicKey();
                     console.log( "pk:", pk );
                     real_pubKey = pk;
@@ -431,6 +434,10 @@
             $( '.msg' ).onchange = () => {
                 var msg = $( '.msg' ).value;
                 console.log( msg.length );
+            }
+            $( '.gen_nsec' ).onclick = () => {
+                var sec_key = bytesToHex( nobleSecp256k1.utils.randomPrivateKey() );
+                $( '.nsec' ).value = privkeyToNsec( sec_key );
             }
         </script>
     </body>
