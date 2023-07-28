@@ -233,6 +233,12 @@
                     var div = document.createElement( "div" );
                     div.innerText = msg[ 1 ].substring( 0, 26 ) + "... at " + msg[ 2 ] + "\n\n" + msg[ 0 ];
                     div.className = "message";
+                    if (msg[1] == real_pubKey) {
+                        div.classList.add("user-message");
+                    } else {
+                        div.classList.add("peer-message");
+                    }
+
                     $( '.messages' ).prepend( div );
                 });
             }
