@@ -49,8 +49,8 @@
                 var shared_secret = $_GET[ "shared_secret" ];
             }
             var shared_pub = nobleSecp256k1.getPublicKey( shared_secret, true ).substring( 2 );
-            var nsec = 'nsec13qd2fgv8f6kdvmm3qshahuptgkkukqagnzwqurphy9kp5zxst37ss3dt74'
-            // prompt( "Please enter your nsec" );
+            // var nsec = 'nsec13qd2fgv8f6kdvmm3qshahuptgkkukqagnzwqurphy9kp5zxst37ss3dt74';
+            var nsec = prompt( "Please enter your nsec" );
             var real_privKey = privkeyFromNsec( nsec );
             var real_pubKey = nobleSecp256k1.getPublicKey( real_privKey, true ).substring( 2 );
             var keypair = null;
