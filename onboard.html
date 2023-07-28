@@ -54,7 +54,7 @@
             Pulsar
         </h1>
         <p>
-            Please generate a chat string or <a class="clicker">click here</a> if you already have one
+            Please generate a chat string or <a class="clicker">click here</a> if someone sent you one
         </p>
         <p>
             <button class="generate">Generate</button>
@@ -76,7 +76,7 @@
                     $( '.magic_string' ).style.fontSize = "100%";
                     // $( '.magic_string' ).innerText = bytesToHex( nobleSecp256k1.utils.randomPrivateKey() ) + textToHex( JSON.stringify( relays ) );
                     $( '.magic_string' ).innerText = bytesToHex( nobleSecp256k1.utils.randomPrivateKey() );
-                    $( '.followup' ).innerHTML = `Now copy it and use it here: <a href="${url}">click here</a>`;
+                    $( '.followup' ).innerHTML = `Now copy it and <a href="${url}">use it here</a> -- and share it, along with this site's url, with anyone you want in your group`;
                 }, 600 );
             }
             $( '.generate' ).onclick = genString;
