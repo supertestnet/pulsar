@@ -3,6 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, user-scalable=no">
+        <title>Pulsar</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch&family=Source+Code+Pro&family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
@@ -26,6 +27,9 @@
             var sha256  = bitcoinjs.crypto.sha256;
             var num_of_messages = 0;
             var timestamp_of_oldest_message = null;
+            var message_queue = [];
+            var real_messages = [];
+            var displayed_msgs = [];
             function bytesToHex( bytes ) {
                 return bytes.reduce( ( str, byte ) => str + byte.toString( 16 ).padStart( 2, "0" ), "" );
             }
@@ -44,21 +48,26 @@
             function privkeyFromNsec( nsec ) {
                 return bytesToHex( bech32.bech32.fromWords( bech32.bech32.decode( nsec ).words ) );
             }
-            if ( !$_GET[ "shared_secret" ] ) {
-                var shared_secret = bytesToHex( nobleSecp256k1.utils.randomPrivateKey() );
-                window.location.href = window.location.href + "?shared_secret=" + shared_secret;
-            } else {
-                var shared_secret = $_GET[ "shared_secret" ];
+            if ( !$_GET[ "relays" ] ) {
+                if ( window.location.href.endsWith( "index.html" ) ) {
+                    var url = window.location.protocol + "//" + window.location.hostname + window.location.pathname.substring( 0, window.location.pathname.length - 10 ) + "onboard.html";
+                } else {
+                    var url = window.location.protocol + "//" + window.location.hostname + window.location.pathname + "onboard.html";
+                }
+                window.location.href = url;
             }
-            var shared_pub = nobleSecp256k1.getPublicKey( shared_secret, true ).substring( 2 );
+            var shared_secret = null;
+            var shared_pub = null;
+            var real_privKey = null;
+            var real_pubKey = null;
             // var nsec = 'nsec13qd2fgv8f6kdvmm3qshahuptgkkukqagnzwqurphy9kp5zxst37ss3dt74';
-            var nsec = prompt( "Please enter your nsec" );
-            var real_privKey = privkeyFromNsec( nsec );
-            var real_pubKey = nobleSecp256k1.getPublicKey( real_privKey, true ).substring( 2 );
+            // var nsec = prompt( "Please enter your nsec" );
+            // var nsec = null;
+            // var real_privKey = privkeyFromNsec( nsec );
+            // var real_pubKey = nobleSecp256k1.getPublicKey( real_privKey, true ).substring( 2 );
             var keypair = null;
             var privKey = null;
             var pubKey  = null;
-            console.log( real_pubKey );
             var relay = "wss://nostrue.com";
             var socket = new WebSocket( relay );
             socket.addEventListener('message', async function( message ) {
@@ -70,7 +79,10 @@
                 //     content = await decrypt(shared_secret, event.pubkey, content);
                 // }
                 var real_msg = await detectRealMessage( event );
-                if ( real_msg[ 0 ] ) real_messages.push( real_msg );
+                if ( !real_msg[ 0 ] ) return;
+                if ( displayed_msgs.includes( event.id ) ) return;
+                displayed_msgs.push( event.id );
+                real_messages.push( real_msg );
                 populateRealMessages();
                 if ( !subId.startsWith( "00000001" ) ) return;
                 num_of_messages = num_of_messages + 1;
@@ -80,48 +92,30 @@
                 var subId   = "00000001" + bitcoinjs.ECPair.makeRandom().privateKey.toString( "hex" ).substring( 0, 8 );
                 var filter  = { "#p": [ shared_pub ], until: timestamp_of_oldest_message, limit: 50 }
                 var subscription = [ "REQ", subId, filter ];
-                console.log('Subscription:', subscription);
                 socket.send(JSON.stringify( subscription ));
             });
 
-            socket.addEventListener('open', async function( e ) {
+            async function openConnection( e ) {
                 console.log( "connected to " + relay );
+                if ( !shared_pub ) {
+                    await waitSomeSeconds( 1 );
+                    openConnection( e );
+                    return;
+                }
                 var now = Math.floor( Date.now() / 1000 );
                 var subId   = "00000000" + bitcoinjs.ECPair.makeRandom().privateKey.toString( "hex" ).substring( 0, 8 );
                 var filter  = { "#p": [ shared_pub ], since: now }
                 var subscription = [ "REQ", subId, filter ];
-                console.log('Subscription:', subscription);
                 socket.send(JSON.stringify( subscription ));
                 var subId   = "00000001" + bitcoinjs.ECPair.makeRandom().privateKey.toString( "hex" ).substring( 0, 8 );
                 var filter  = { "#p": [ shared_pub ], until: now, limit: 50 }
                 var subscription = [ "REQ", subId, filter ];
-                console.log('Subscription:', subscription);
                 socket.send(JSON.stringify( subscription ));
                 setTimeout( messageMaker, 3000 );
+            }
 
-                // var event = {
-                //     "content"    : "this workshop is awesome!",
-                //     "created_at" : Math.floor( Date.now() / 1000 ),
-                //     "kind"       : 1,
-                //     "tags"       : [],
-                //     "pubkey"     : pubKey,
-                // }
-                // var signedEvent = await getSignedEvent(event, privKey);
-                // console.log('signedEvent:', signedEvent);
-                // socket.send(JSON.stringify([ "EVENT", signedEvent ]));
+            socket.addEventListener('open', openConnection );
 
-                // var message   = "this message is super secret!";
-                // var encrypted = encrypt( privKey, pubKey, message );
-                // var event2 = {
-                //     "content"   : encrypted,
-                //     "created_at" : Math.floor( Date.now() / 1000 ),
-                //     "kind"      : 4,
-                //     "tags"      : [ [ 'p', pubKey ] ],
-                //     "pubkey"    : pubKey,
-                // }
-                // var signedEvent2 = await getSignedEvent(event2, privKey);
-                // socket.send(JSON.stringify([ "EVENT", signedEvent2 ]));
-            });
             async function getSignedEvent(event, privateKey) {
                 var eventData = JSON.stringify([
                     0,                  // Reserved for future use
@@ -193,10 +187,16 @@
                 return text;
             }
             var send = msg => {
-                message_queue.unshift( msg );
+                var now = Math.floor( Date.now() / 1000 );
+                var first_part = String( now ).substring( 0, String( now ).length - 1 );
+                var second_part = String( now ).substring( String( now ).length - 1 );
+                var second_part = roundToOneFourOrSeven( Number( second_part ) );
+                now = Number( first_part + String( second_part ) );
+                message_queue.unshift( [ msg, now ] );
+                console.log( "sending:", true, msg, now )
+                messageMaker( true, msg, now );
             }
             var detectRealMessage = async event => {
-                console.log( "got one!" );
                 var msg = decrypt( shared_secret, event.pubkey, event[ "content" ] );
                 var pubkey = msg.substring( msg.length - 64 );
                 var sig = msg.substring( msg.length - ( 128 + 64 ), msg.length - 64 );
@@ -219,7 +219,7 @@
                     event['content']
                 ]);
                 event[ "id" ]  = sha256( eventData ).toString( 'hex' );
-                var sig_is_valid = await schnorr.verify( sig, event[ "id" ], pubkey );
+                if ( msg ) var sig_is_valid = await schnorr.verify( sig, event[ "id" ], pubkey );
                 var returnable = ["", sig, pubkey, event['created_at']];
                 if ( sig_is_valid ) returnable = [msg, pubkey, event['created_at']];
                 return returnable;
@@ -242,32 +242,70 @@
                     $( '.messages' ).prepend( div );
                 });
             }
+            var roundToOneFourOrSeven = num => {
+                if ( num === 0 ) num = 1;
+                if ( num === 1 ) num = 1;
+                if ( num === 2 ) num = 1;
+                if ( num === 3 ) num = 4;
+                if ( num === 4 ) num = 4;
+                if ( num === 5 ) num = 4;
+                if ( num === 6 ) num = 7;
+                if ( num === 7 ) num = 7;
+                if ( num === 8 ) num = 7;
+                if ( num === 9 ) num = 7;
+                return num;
+            }
         </script>
     </head>
     <body>
         <h1>Pulsar</h1>
-        <p><input class="msg"></p>
-        <div class="button-row">
-            <button class="send">Send</button>
+        <div class="chat_string">
+            <p>Enter your chat string</p>
+            <p><input class="shared_secret"></p>
+            <p>Enter your nsec</p>
+            <p><input class="nsec"></p>
+            <div class="button-row">
+                <button class="submit">Submit</button>
+            </div>
         </div>
-        <div class="messages"></div>
-        <div class="invisible_messages hidden"></div>
+        <div class="messenger hidden">
+            <p><input class="msg"></p>
+            <div class="button-row">
+                <button class="send">Send</button>
+            </div>
+            <div class="messages"></div>
+            <div class="invisible_messages hidden"></div>
+        </div>
         <script>
-            var message_queue = [];
-            var real_messages = [];
-            var messageMaker = async () => {
+            var messageMaker = async ( once, msg, timestamp ) => {
+                if ( !shared_secret ) {
+                    await waitSomeSeconds( 1 );
+                    if ( !once ) messageMaker();
+                    return;
+                }
                 keypair = bitcoinjs.ECPair.makeRandom();
                 privKey = keypair.privateKey.toString( "hex" );
                 pubKey  = keypair.publicKey.toString( "hex" ).substring( 2 );
                 var padding = "0".repeat( 1000 );
-                var original_message = message_queue.pop() || "";
+                if ( !msg ) {
+                    var original_array = message_queue.pop() || "";
+                    if ( original_array ) {
+                        var original_message = original_array[ 0 ];
+                        var original_timestamp = original_array[ 1 ];
+                    } else {
+                        var original_message = "";
+                        var original_timestamp = 1234567890;
+                    }
+                } else {
+                    var original_message = msg;
+                    var original_timestamp = timestamp;
+                }
                 var message = padding + textToHex( original_message );
                 message = message.substring( message.length - 1000 );
-                var timestamp = Math.floor( Date.now() / 1000 );
                 //sign the real version of the event
                 var event = {
                     "content"    : original_message,
-                    "created_at" : timestamp,
+                    "created_at" : original_timestamp,
                     "kind"       : 4,
                     "tags"       : [ [ "p", shared_pub ] ],
                     "pubkey"     : real_pubKey,
@@ -283,15 +321,38 @@
                 encrypted_msg = encrypt( shared_secret, pubKey, message );
                 var event = {
                     "content"    : encrypted_msg,
-                    "created_at" : timestamp,
+                    "created_at" : original_timestamp,
                     "kind"       : 4,
                     "tags"       : [ [ "p", shared_pub ] ],
                     "pubkey"     : pubKey,
                 }
                 var publishable_signed_event = await getSignedEvent( event, privKey );
-                socket.send(JSON.stringify([ "EVENT", publishable_signed_event ]));
+                if ( !once ) socket.send(JSON.stringify([ "EVENT", publishable_signed_event ]));
+                if ( original_message ) {
+                    var real_msg = await detectRealMessage( event );
+                } else {
+                    var real_msg = [""];
+                }
+                if ( !real_msg[ 0 ] || displayed_msgs.includes( publishable_signed_event[ "id" ] ) ) {
+                    await waitSomeSeconds( 3 );
+                    if ( !once ) messageMaker();
+                    return;
+                }
+                displayed_msgs.push( publishable_signed_event[ "id" ] );
+                real_messages.push( real_msg );
+                populateRealMessages();
                 await waitSomeSeconds( 3 );
-                messageMaker();
+                if ( !once ) messageMaker();
+            }
+            $( '.submit' ).onclick = () => {
+                shared_secret = $( '.shared_secret' ).value;
+                shared_pub = nobleSecp256k1.getPublicKey( shared_secret, true ).substring( 2 );
+                nsec = $( '.nsec' ).value;
+                real_privKey = privkeyFromNsec( nsec );
+                real_pubKey = nobleSecp256k1.getPublicKey( real_privKey, true ).substring( 2 );
+                $( '.chat_string' ).classList.add( "hidden" );
+                $( '.messenger' ).classList.remove( "hidden" );
+                console.log( real_pubKey );
             }
             $( '.send' ).onclick = () => {
                 var msg = $( '.msg' ).value;
