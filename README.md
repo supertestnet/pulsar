@@ -33,6 +33,6 @@ Because all messages are encrypted, observers cannot surveil message contents.
 
 Because real messages blend in with fixed-frequency junk messages, observers cannot surveil message frequency.
 
-Because of ephemeral keys, observers cannot gather user identities, except by learning a user's ip address, which means you still need to use tor or a vpn.
+Because of ephemeral keys and tor, observers cannot surveil user identities.
 
 Also, any number of users can use Pulsar to communicate with one another, be they 2, 3, 10, 2,000 or whatever. Thus Pulsar fulfills the terms of the bounty.
