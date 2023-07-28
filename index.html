@@ -223,24 +223,67 @@
                 if ( sig_is_valid ) returnable = [msg, pubkey, event['created_at']];
                 return returnable;
             }
-            var populateRealMessages = () => {
-                real_messages.sort( ( a, b ) => {
-                    return a[ 2 ] - b[ 2 ];
-                });
-                $( '.messages' ).innerHTML = ``;
-                real_messages.forEach( msg => {
-                    var div = document.createElement( "div" );
-                    div.innerText = msg[ 1 ].substring( 0, 26 ) + "... at " + msg[ 2 ] + "\n\n" + msg[ 0 ];
-                    div.className = "message";
-                    if (msg[1] == real_pubKey) {
-                        div.classList.add("user-message");
-                    } else {
-                        div.classList.add("peer-message");
-                    }
 
-                    $( '.messages' ).prepend( div );
+            var populateRealMessages = () => {
+                real_messages.sort((a, b) => {
+                    return a[2] - b[2];
+                });
+
+                document.querySelector('.messages').innerHTML = '';
+
+                real_messages.forEach(msg => {
+                    var div = document.createElement('div');
+                    div.className = 'message';
+                    msg[1] === real_pubKey ? div.classList.add('user-message') : div.classList.add('peer-message');
+
+                    var pElement = document.createElement('p');
+                    pElement.innerText = msg[0];
+                    div.appendChild(pElement);
+
+                    var span1 = document.createElement('span');
+                    span1.innerText = msg[1].substring(0, 26) + "...";
+                    div.appendChild(span1);
+
+                    var span2 = document.createElement('span');
+                    span2.classList.add('timestamp');
+                    span2.setAttribute('data-timestamp', msg[2]);
+                    console.log(typeof msg[2])
+                    console.log(msg[2])
+                    span2.innerText = formatTimestamp(msg[2]);
+                    div.appendChild(span2);
+
+                    document.querySelector('.messages').prepend(div);
                 });
             }
+
+            function formatTimestamp(timestamp) {
+                const currentTime = new Date();
+                const msgTime = new Date(Number(timestamp) * 1000); // Convert timestamp string back to a number and to milliseconds
+                const timeDifference = currentTime - msgTime;
+                const differenceInMinutes = Math.floor(timeDifference / (60 * 1000));
+
+                if (differenceInMinutes < 1) {
+                    return 'less than a minute ago';
+                } else if (differenceInMinutes < 60) {
+                    return `${differenceInMinutes} ${differenceInMinutes > 1 ? 'minutes' : 'minute'} ago`;
+                } else {
+                    return msgTime.toLocaleString();
+                }
+            }
+
+            function updateTimestamps() {
+                const timestampElements = document.getElementsByClassName('timestamp');
+
+                for (let i = 0; i < timestampElements.length; i++) {
+                    const timestampElement = timestampElements[i];
+                    const timestamp = timestampElement.getAttribute('data-timestamp');
+                    timestampElement.innerText = formatTimestamp(timestamp);
+                }
+            }
+
+            setTimeout(updateTimestamps, 60 * 1000); // Start after 1 minute delay
+            setInterval(updateTimestamps, 60 * 1000); // Then run every minute
+
             var roundToOneFourOrSeven = num => {
                 if ( num === 0 ) num = 1;
                 if ( num === 1 ) num = 1;
@@ -268,11 +311,11 @@
             </div>
         </div>
         <div class="messenger hidden">
+            <div class="messages"></div>
             <p><input class="msg"></p>
             <div class="button-row">
                 <button class="send">Send</button>
             </div>
-            <div class="messages"></div>
             <div class="invisible_messages hidden"></div>
         </div>
         <script>
