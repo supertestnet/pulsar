@@ -15,9 +15,9 @@ Consequently, my goals are:
 
 (2) outside observers cannot see message contents
 
-(2) outside observers cannot see user identities
+(3) outside observers cannot see user identities
 
-(3) outside observers cannot see message frequency
+(4) outside observers cannot see message frequency
 
 # How does it work?
 A group creator gives a "shared secret" to the other members, allowing anyone who knows it to encrypt and decrypt group messages. Every user transmits an encrypted message every 3 seconds, using a fresh, new nostr key, even when they haven't typed anything. Most of these messages contain junk data. Each client decrypts this data, detects if it is junk, and discards it if so. All of these junk messages are the same length -- a little over 1000 characters. When a user *really* types something, their real message is queued so that it goes out only when the next junk message is scheduled. The real message, too, is limited in size, and if it is less than the maximum size it is padded to a litle over 1000 characters. That way it "blends in" with the junk messages that are transmitted every 3 seconds. When a real message is decrypted by the other clients, they detect that it isn't junk, so they discard the padding (if any) and display the message. Each user's real pubkey and real signature is also embedded within each of their messages so that everyone who knows the shared secret also knows who said what.
