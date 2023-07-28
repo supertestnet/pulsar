@@ -9,9 +9,9 @@ The human rights foundation [posted](https://bitcoinmagazine.com/business/human-
 
 > The third bounty is another 2 BTC reward for the creation of a Nostr client implementation of end to end encrypted group chats which is incapable of leaking metadata to potentially malicious third parties. In order to be eligible, the group chat must enable three or more users to communicate, with no ability for outside adversaries to gather the content of the messages, nor the identity or frequency of the users messaging.
 
-The goals are:
+Consequently, my goals are:
 
-(1) let 3 or more users communicate
+(1) three or more users can communicate
 
 (2) outside observers cannot see message contents
 
