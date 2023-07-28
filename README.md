@@ -29,4 +29,4 @@ Because real messages blend in with fixed-frequency junk messages, observers can
 
 Because of ephemeral keys, observers cannot gather user identities, except by learning a user's ip address, which means you still need to use tor or a vpn.
 
-Also, any number of users can use Pulsar to communicate, 3 or 10 or 2,000 or whatever. Thus Pulsar fulfills the terms of the bounty.
+Also, any number of users can use Pulsar to communicate with one another, be they 2, 3, 10, 2,000 or whatever. Thus Pulsar fulfills the terms of the bounty.
