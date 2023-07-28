@@ -33,6 +33,6 @@ Because all messages are encrypted, observers cannot surveil message contents.
 
 Because all messages are queued for fixed frequency, observers cannot surveil their true frequency.
 
-Because of ephemeral keys and tor, observers cannot surveil user identities.
+Because all messages use ephemeral keys and tor, observers cannot surveil user identities.
 
 Also, any number of users can use Pulsar to communicate with one another, be they 2, 3, 10, 2,000 or whatever. Thus Pulsar fulfills the terms of the bounty.
