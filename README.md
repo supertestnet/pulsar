@@ -6,7 +6,7 @@ Pulsar is an encrypted chat app that masks all your metadata except your ip addr
 
 # How to try it
 
-Click here: supertestnet.github.io/pulsar/
+Click here: https://supertestnet.github.io/pulsar/
 
 # Why did you make this?
 The human rights foundation [posted](https://bitcoinmagazine.com/business/human-rights-foundation-announces-20-btc-bounty-challenge-for-bitcoin-development) the following bounty:
