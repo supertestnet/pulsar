@@ -228,7 +228,6 @@
                 real_messages.sort( ( a, b ) => {
                     a[ 2 ] - b[ 2 ];
                 });
-                real_messages.reverse();
                 $( '.messages' ).innerHTML = ``;
                 real_messages.forEach( msg => {
                     var div = document.createElement( "div" );
