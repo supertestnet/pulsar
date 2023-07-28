@@ -241,14 +241,14 @@
                     div.appendChild(pElement);
 
                     var span1 = document.createElement('span');
-                    span1.innerText = msg[1].substring(0, 26) + "...";
+                    msg[1] === real_pubKey ? span1.innerText = "You"; : span1.innerText = msg[1].substring(0, 26) + "...";
                     div.appendChild(span1);
 
                     var span2 = document.createElement('span');
                     span2.classList.add('timestamp');
                     span2.setAttribute('data-timestamp', msg[2]);
-                    console.log(typeof msg[2])
-                    console.log(msg[2])
+                    // console.log(typeof msg[2])
+                    // console.log(msg[2])
                     span2.innerText = formatTimestamp(msg[2]);
                     div.appendChild(span2);
 
