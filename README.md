@@ -4,6 +4,10 @@ My submission for the HRF's encrypted group chat bounty
 # What is this?
 Pulsar is an encrypted chat app that masks all your metadata except your ip address. It works by sending fixed-length, fixed-frequency messages over the nostr messaging network.
 
+# How to try it
+
+Click here: supertestnet.github.io/pulsar/
+
 # Why did you make this?
 The human rights foundation [posted](https://bitcoinmagazine.com/business/human-rights-foundation-announces-20-btc-bounty-challenge-for-bitcoin-development) the following bounty:
 
