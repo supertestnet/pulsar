@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, user-scalable=no">
+        <title>Pulsar</title>
+        <link rel="shortcut icon" type="image/png" href="favicon.png">
+        <script src="https://bundle.run/noble-secp256k1@1.2.14"></script>
+        <link rel="stylesheet" href="index.css?v=1">
+        <script>
+            var $ = document.querySelector.bind( document );
+            var $$ = document.querySelectorAll.bind( document );
+            var url_params = new URLSearchParams( window.location.search );
+            var url_keys = url_params.keys();
+            var $_GET = {}
+            for ( var key of url_keys ) $_GET[ key ] = url_params.get( key );
+            var relays = [
+                "wss://nostrue.com",
+                "wss://relay.damus.io",
+                "wss://nostr.uthark.com"
+            ]
+        </script>
+        <script>
+            function bytesToHex( bytes ) {
+                return bytes.reduce( ( str, byte ) => str + byte.toString( 16 ).padStart( 2, "0" ), "" );
+            }
+            function textToHex( text ) {
+                var encoder = new TextEncoder().encode( text );
+                return [...new Uint8Array(encoder)]
+                    .map( x => x.toString( 16 ).padStart( 2, "0" ) )
+                    .join( "" );
+            }
+            function hexToText( hex ) {
+                var bytes = new Uint8Array(Math.ceil(hex.length / 2));
+                for (var i = 0; i < hex.length; i++) bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+                var text = new TextDecoder().decode( bytes );
+                return text;
+            }
+            function modalVanish() {
+                $( ".black-bg" ).style.display = "none";
+                $( ".modal" ).style.display = "none";
+            }
+            function showModal( content, block_til_clear ) {
+                if ( block_til_clear ) var fn = `modalVanish();sessionStorage[ 'modal_cleared' ] = true;`; else var fn = `modalVanish();`;
+                $( ".modal" ).innerHTML = `<div style="position: absolute;right: 1rem;top: 0.5rem;font-size: 2rem; cursor: pointer;" onclick="${fn}">&times;</div>`;
+                $( ".modal" ).innerHTML += `<div style="overflow-y: scroll; max-height: 80vh; margin-top: 1.5rem;">${content}</div>`;
+                $( ".black-bg" ).style.display = "block";
+                $( ".modal" ).style.display = "block";
+            }
+        </script>
+    </head>
+    <body>
+        <h1>
+            Pulsar
+        </h1>
+        <p>
+            Please generate a chat string or <a class="clicker">click here</a> if you already have one
+        </p>
+        <p>
+            <button class="generate">Generate</button>
+        </p>
+        <div style="flex-direction: column; justify-content: center; align-items: center; word-wrap: break-word; overflow-wrap: anywhere; padding: 1rem; border: 1px solid black; margin-top: 1rem; display: none;" class="magic_string_box"><p style="font-weight: bold; text-decoration: underline;">Your chat string</p><div class="magic_string"></div></div>
+        <script>
+            var index = window.location.pathname.indexOf( "onboard.htm" ) > -1 ? window.location.pathname.indexOf( "onboard.htm" ):100000;
+            var extra_slash = window.location.pathname.substring( 0, index ).endsWith( "/" ) ? "":"/";
+            var url = window.location.protocol + "//" + window.location.hostname + window.location.pathname.substring( 0, index ) + extra_slash + "index.html?relays=" + encodeURI( JSON.stringify( relays ) );
+            $( '.clicker' ).href = url;
+            var genString = () => {
+                $( '.magic_string_box' ).style.display = "flex";
+                $( '.magic_string' ).innerText = "•";
+                $( '.magic_string' ).style.fontSize = "250%";
+                setTimeout( function() {$( '.magic_string' ).innerText = "••";}, 200 );
+                setTimeout( function() {$( '.magic_string' ).innerText = "•••";}, 400 );
+                setTimeout( function() {
+                    $( '.magic_string_box' ).innerHTML = `<p style="font-weight: bold; text-decoration: underline;">Your chat string</p><div class="magic_string" style="text-align: center;"></div><p class="followup" style="text-align: center;"></p>`;
+                    $( '.magic_string' ).style.fontSize = "100%";
+                    // $( '.magic_string' ).innerText = bytesToHex( nobleSecp256k1.utils.randomPrivateKey() ) + textToHex( JSON.stringify( relays ) );
+                    $( '.magic_string' ).innerText = bytesToHex( nobleSecp256k1.utils.randomPrivateKey() );
+                    $( '.followup' ).innerHTML = `Now copy it and use it here: <a href="${url}">click here</a>`;
+                }, 600 );
+            }
+            $( '.generate' ).onclick = genString;
+        </script>
+        <div class="black-bg"></div>
+        <div class="modal"></div>
+    </body>
+</html>
