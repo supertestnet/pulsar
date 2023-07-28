@@ -31,7 +31,7 @@ A group creator creates a "chat string" -- i.e. a shared secret -- and sends it 
 # What data does this protect?
 Because all messages are encrypted, observers cannot surveil message contents.
 
-Because real messages blend in with fixed-frequency junk messages, observers cannot surveil message frequency.
+Because all messages are sent with fixed frequency, observers cannot surveil message frequency.
 
 Because of ephemeral keys and tor, observers cannot surveil user identities.
 
