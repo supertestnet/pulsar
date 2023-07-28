@@ -74,7 +74,7 @@ button:hover {
   padding: 0.5rem 1rem;
   word-wrap: break-word;
 }
-.user-message span {
+.user-message span, .peer-message span {
   display: flex;
   flex-direction: column;
   font-size: 0.8rem;
