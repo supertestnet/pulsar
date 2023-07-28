@@ -225,19 +225,16 @@
                 return returnable;
             }
             var populateRealMessages = () => {
+                $( '.messages' ).innerHTML = ``;
                 real_messages.sort( ( a, b ) => {
                     b[ 2 ] - a[ 2 ];
                 });
-                var msg = real_messages.pop() || [];
-                if ( !msg[ 0 ] ) return;
-                var div = document.createElement( "div" );
-                div.innerText = msg[ 1 ].substring( 0, 26 ) + "... at " + msg[ 2 ] + "\n\n" + msg[ 0 ];
-                if (msg[1] == real_pubKey) {
-                    div.classList.add("user-message");
-                } else {
-                    div.classList.add("peer-message");
-                }
-                $( '.messages' ).prepend( div );
+                real_messages.forEach( msg => {
+                    var div = document.createElement( "div" );
+                    div.innerText = msg[ 1 ].substring( 0, 26 ) + "... at " + msg[ 2 ] + "\n\n" + msg[ 0 ];
+                    div.className = "message";
+                    $( '.messages' ).prepend( div );
+                });
             }
         </script>
     </head>
