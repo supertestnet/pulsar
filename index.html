@@ -236,6 +236,31 @@
                     div.className = 'message';
                     msg[1] === real_pubKey ? div.classList.add('user-message') : div.classList.add('peer-message');
 
+                    if (div.classList.contains('peer-message')) {
+                        var wrapper = document.createElement('div');
+                        wrapper.className = 'options-wrapper';
+
+                        var button = document.createElement('button');
+                        button.className = 'options-button';
+                        button.innerHTML = "...";
+                        button.onclick = function() {
+                            this.nextSibling.classList.toggle('show');
+                        };
+                        wrapper.appendChild(button);
+
+                        var dropdownContent = document.createElement('div');
+                        dropdownContent.className = 'dropdown-content';
+                        
+                        var createAliasLink = document.createElement('p');
+                        createAliasLink.innerText = "Create user alias";
+                        // Add event listener for 'create user alias' option here
+                        dropdownContent.appendChild(createAliasLink);
+
+                        wrapper.appendChild(dropdownContent);
+                        div.appendChild(wrapper);
+                    }
+
+
                     var pElement = document.createElement('p');
                     pElement.innerText = msg[0];
                     div.appendChild(pElement);
@@ -247,14 +272,17 @@
                     var span2 = document.createElement('span');
                     span2.classList.add('timestamp');
                     span2.setAttribute('data-timestamp', msg[2]);
-                    // console.log(typeof msg[2])
-                    // console.log(msg[2])
                     span2.innerText = formatTimestamp(msg[2]);
                     div.appendChild(span2);
 
-                    document.querySelector('.messages').prepend(div);
+                    document.querySelector('.messages').appendChild(div);  // Use appendChild here
                 });
+
+                // Scroll to bottom of chat
+                var messageBox = document.querySelector('.messages');
+                messageBox.scrollTop = messageBox.scrollHeight;
             }
+
 
             function formatTimestamp(timestamp) {
                 const currentTime = new Date();
@@ -297,6 +325,18 @@
                 if ( num === 9 ) num = 7;
                 return num;
             }
+
+            window.onclick = function(event) {
+                if (!event.target.matches('.options-button')) {
+                    var dropdowns = document.getElementsByClassName("dropdown-content");
+                    for (var i = 0; i < dropdowns.length; i++) {
+                        var openDropdown = dropdowns[i];
+                        if (openDropdown.classList.contains('show')) {
+                            openDropdown.classList.remove('show');
+                        }
+                    }
+                }
+            }
         </script>
     </head>
     <body>
@@ -316,10 +356,10 @@
         </div>
         <div class="messenger hidden">
             <div class="messages"></div>
-            <p><input class="msg"></p>
-            <div class="button-row">
+            <div class="button-input-row">
+                <input class="msg">
                 <button class="send">Send</button>
-            </div>
+            </div>               
             <div class="invisible_messages hidden"></div>
         </div>
         <script>
