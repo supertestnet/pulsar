@@ -24,6 +24,8 @@
             var crypto  = window.crypto;
             var getRand = size => crypto.getRandomValues(new Uint8Array(size));
             var sha256  = bitcoinjs.crypto.sha256;
+            var num_of_messages = 0;
+            var timestamp_of_oldest_message = null;
             function bytesToHex( bytes ) {
                 return bytes.reduce( ( str, byte ) => str + byte.toString( 16 ).padStart( 2, "0" ), "" );
             }
@@ -70,13 +72,28 @@
                 var real_msg = await detectRealMessage( event );
                 if ( real_msg[ 0 ] ) real_messages.push( real_msg );
                 populateRealMessages();
+                if ( !subId.startsWith( "00000001" ) ) return;
+                num_of_messages = num_of_messages + 1;
+                timestamp_of_oldest_message = event.created_at;
+                if ( num_of_messages < 50 ) return;
+                num_of_messages = 0;
+                var subId   = "00000001" + bitcoinjs.ECPair.makeRandom().privateKey.toString( "hex" ).substring( 0, 8 );
+                var filter  = { "#p": [ shared_pub ], until: timestamp_of_oldest_message, limit: 50 }
+                var subscription = [ "REQ", subId, filter ];
+                console.log('Subscription:', subscription);
+                socket.send(JSON.stringify( subscription ));
             });
 
             socket.addEventListener('open', async function( e ) {
                 console.log( "connected to " + relay );
-
-                var subId   = bitcoinjs.ECPair.makeRandom().privateKey.toString( "hex" ).substring( 0, 16 );
-                var filter  = { "#p": [ shared_pub ] }
+                var now = Math.floor( Date.now() / 1000 );
+                var subId   = "00000000" + bitcoinjs.ECPair.makeRandom().privateKey.toString( "hex" ).substring( 0, 8 );
+                var filter  = { "#p": [ shared_pub ], since: now }
+                var subscription = [ "REQ", subId, filter ];
+                console.log('Subscription:', subscription);
+                socket.send(JSON.stringify( subscription ));
+                var subId   = "00000001" + bitcoinjs.ECPair.makeRandom().privateKey.toString( "hex" ).substring( 0, 8 );
+                var filter  = { "#p": [ shared_pub ], until: now, limit: 50 }
                 var subscription = [ "REQ", subId, filter ];
                 console.log('Subscription:', subscription);
                 socket.send(JSON.stringify( subscription ));
