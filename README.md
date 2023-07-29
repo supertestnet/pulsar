@@ -17,13 +17,13 @@ The human rights foundation [posted](https://bitcoinmagazine.com/business/human-
 
 Consequently, my goals are:
 
-(1) three or more users can communicate
+(1) outside observers cannot see message contents
 
-(2) outside observers cannot see message contents
+(2) outside observers cannot see user identities
 
-(3) outside observers cannot see user identities
+(3) outside observers cannot see message frequency
 
-(4) outside observers cannot see message frequency
+(4) three or more users can communicate
 
 # How does it work?
 A group creator creates a "chat string" -- i.e. a shared secret -- and sends it to the other members. Anyone who knows the chat string can encrypt and decrypt group messages. Every user transmits an encrypted message every 3 seconds, using a fresh, new nostr key, even when they haven't typed anything. Most of these messages contain junk data. Each client decrypts this data, detects if it is junk, and discards it if so. All of these junk messages are the same length -- a little over 1000 characters. When a user *really* types something, their real message is queued so that it replaces the next junk message in the queue, and goes out when that junk message *would have* gone out. The real message, too, is limited in size, and if it is less than the maximum size it is padded to a little over 1000 characters. That way it "blends in" with the junk messages that are transmitted every 3 seconds. When a real message is decrypted by the other clients, they detect that it isn't junk, so they discard the padding (if any) and display the message. Each user's real pubkey and real signature is also embedded within each of their messages so that everyone who knows the shared secret also knows who said what.
