@@ -1,7 +1,7 @@
 * {
   box-sizing: border-box;
   font-size: 1.15rem;
-  font-family: "Chakra Petch", sans-serif;
+  /* font-family: "Chakra Petch", sans-serif; */
   color: ghostwhite;
 }
 html {
@@ -180,7 +180,7 @@ button:hover {
   top: 0;
   left: 0;
   background-color: black;
-  opacity: .5;
+  opacity: 0.5;
   width: 100vw;
   height: 100vh;
 }
@@ -190,7 +190,7 @@ button:hover {
   box-sizing: border-box;
   top: 50%;
   left: 50%;
-  transform: translate(-50%,-50%);
+  transform: translate(-50%, -50%);
   width: 100%;
   max-width: 560px;
   background-color: white;
