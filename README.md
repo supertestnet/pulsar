@@ -44,6 +44,8 @@ Also, the shared secret allows any number of people to use Pulsar to communicate
 
 (3) Observers can treat the moment you start sending messages to a group as a "log in" moment and the moment you stop as a "log out" moment, thus getting an upper bound on the number of messages you sent, though this would not tell them the *actual* number of messages you sent
 
-(4) Observers can combine the previous data points and use heuristics to guess how many people are probably in a group and their possible time zones. For example: "5 people logged in to the same group during primetime in the Eastern USA time zone. 2 people logged into the same group during primetime in the Western European time zone. So there are probably 7 people in the group in two different time zones."
+(4) Observers who control one of the relays users connect to can additionally see when websocket connections are opened and closed, and treat those as additional data points about when people log in and log out
 
-(5) Observers can see that the maximum size of any message is about 1000 characters
+(5) Observers can combine the previous data points and use heuristics to guess how many people are probably in a group and their possible time zones. For example: "5 people logged in to the same group during primetime in the Eastern USA time zone. 2 people logged into the same group during primetime in the Western European time zone. So there are probably 7 people in the group in two different time zones."
+
+(6) Observers know in advance that the maximum size of any message is about 1000 characters
