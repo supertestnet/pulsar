@@ -33,6 +33,19 @@ A group creator creates a "chat string" -- i.e. a shared secret -- and sends it 
 
 (2) User identities -- all keys rotate constantly and users connect via tor
 
-(3) Message frequency -- real messages are queued with junk messages and padded to the same size, then sent out with fixed frequency so they blend in
+(3) Message frequency -- real messages are queued with junk messages and padded to the same size, then sent out with fixed frequency so they blend in (but see #6 in the section below this one -- there is currently a bug which allows an attacker to discover messsage frequency, and the bug must be fixed)
 
 Also, the shared secret allows any number of people to use Pulsar to communicate with one another, be they 2, 3, 10, 2,000 or whatever. Thus Pulsar fulfills the terms of the bounty.
+
+# What metadata can outside observers still detect?
+(1) Each group has a "shared public key" which all in-group messages reference in each of their messages. Observers can detect all references to this shared public key
+
+(2) Observers can detect, at any given time, how many people are sending fixed-frequency messages that reference a group's shared public key, and treat these as messages to everyone in the group
+
+(3) Observers can treat the moment you start sending messages to a group as a "log in" moment and the moment you stop as a "log out" moment
+
+(4) Observers can combine the previous data points and use heuristics to guess how many people are probably in a group and their possible time zones. For example: "5 people logged in to the same group during primetime in the Eastern time zone. 2 people logged into the same group and talked during primetime in the Western European time zone. So there are probably 7 people in the group in two different time zones."
+
+(5) Observers can see that the maximum size of any message is about 1000 characters
+
+(6) The AES-CBC encryption standard, as implemented by nip4 and therefore Pulsar, uses an "initialization vector" to encrypt messages in blocks. One attack against this encryption standard involves guessing the contents of an encrypted block, then using the initialization vector as a king of checksum to see if your guess was correct. Guessing correctly is often easy to do if the messages follow a preknown format. For example, Pulsar currently uses 0-value byte vectors to pad real messages, and junk messages are basically just 1000 0-value byte vectors. Since the way Pulsar produces padding and junk has a known pattern, an attacker can take each encrypted block, "guess" that it's a bunch of zeroes, and use the intiialization vector to check if their guess is correct. If it is, they can discard that padding. This attack allows an observer to identify and discard all "junk" messages, and also identify and discard almost all of the padding in a real message. This attack thus reveals the frequency of real messages as well as their length. There are two easy ways to fix it, though: (1) use random byte vectors, not 0-value byte vectors, as padding (2) use a different encryption scheme. We intend to shortly mitigate this attack using option (1).
