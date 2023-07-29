@@ -257,41 +257,42 @@
         message_queue.unshift([msg, now]);
         messageMaker(true, msg, now);
       };
-      var detectRealMessage = async event => {
-          var msg = decrypt( shared_secret, event.pubkey, event[ "content" ] );
-          var pubkey = msg.substring( msg.length - 64 );
-          var sig = msg.substring( msg.length - ( 128 + 64 ), msg.length - 64 );
-          msg = msg.substring( 0, msg.length - ( 128 + 64 ) );
-          msg = msg.match(/(..?)/g);
-          var index_of_last_zero = -1;
-          msg.reverse();
-          msg.every( ( char, index ) => {
-              if ( char === "00" ) {
-                  index_of_last_zero = 500 - index;
-                  return;
-              }
-              return true;
-          });
-          msg.reverse();
-          msg.splice( 0, index_of_last_zero );
-          msg = msg.join( "" );
-          msg = hexToText( msg );
-          event[ "content" ] = msg;
-          event[ "pubkey" ] = pubkey;
-          event[ "sig" ] = sig;
-          var eventData = JSON.stringify([
-              0,
-              event['pubkey'],
-              event['created_at'],
-              event['kind'],
-              event['tags'],
-              event['content']
-          ]);
-          event[ "id" ]  = sha256( eventData ).toString( 'hex' );
-          if ( msg ) var sig_is_valid = await schnorr.verify( sig, event[ "id" ], pubkey );
-          var returnable = ["", sig, pubkey, event['created_at']];
-          if ( sig_is_valid ) returnable = [msg, pubkey, event['created_at']];
-          return returnable;
+      var detectRealMessage = async (event) => {
+        var msg = decrypt(shared_secret, event.pubkey, event["content"]);
+        var pubkey = msg.substring(msg.length - 64);
+        var sig = msg.substring(msg.length - (128 + 64), msg.length - 64);
+        msg = msg.substring(0, msg.length - (128 + 64));
+        msg = msg.match(/(..?)/g);
+        var index_of_last_zero = -1;
+        msg.reverse();
+        msg.every((char, index) => {
+          if (char === "00") {
+            index_of_last_zero = 500 - index;
+            return;
+          }
+          return true;
+        });
+        msg.reverse();
+        msg.splice(0, index_of_last_zero);
+        msg = msg.join("");
+        msg = hexToText(msg);
+        event["content"] = msg;
+        event["pubkey"] = pubkey;
+        event["sig"] = sig;
+        var eventData = JSON.stringify([
+          0,
+          event["pubkey"],
+          event["created_at"],
+          event["kind"],
+          event["tags"],
+          event["content"],
+        ]);
+        event["id"] = sha256(eventData).toString("hex");
+        if (msg)
+          var sig_is_valid = await schnorr.verify(sig, event["id"], pubkey);
+        var returnable = ["", sig, pubkey, event["created_at"]];
+        if (sig_is_valid) returnable = [msg, pubkey, event["created_at"]];
+        return returnable;
       };
 
       let aliases = JSON.parse(localStorage.getItem("aliases")) || {};
@@ -306,92 +307,10 @@
         real_messages.forEach((msg) => {
           var div = document.createElement("div");
           div.className = "message";
+
           msg[1] === real_pubKey
             ? div.classList.add("user-message")
             : div.classList.add("peer-message");
-
-          if (div.classList.contains("peer-message")) {
-            var wrapper = document.createElement("div");
-            wrapper.className = "options-wrapper";
-
-            var button = document.createElement("button");
-            button.className = "options-button";
-            button.innerHTML = "...";
-            button.onclick = function () {
-              this.nextSibling.classList.toggle("show");
-            };
-            wrapper.appendChild(button);
-
-            var dropdownContent = document.createElement("div");
-            dropdownContent.className = "dropdown-content";
-
-            var copyNpubLink = document.createElement("p");
-            copyNpubLink.innerText = "copy npub";
-
-            copyNpubLink.onclick = function () {
-              navigator.clipboard.writeText(pubkeyToNpub(msg[1])).then(
-                () => {
-                  console.log("Public key copied to clipboard");
-                },
-                (err) => {
-                  console.error("Could not copy text: ", err);
-                }
-              );
-            };
-
-            dropdownContent.appendChild(copyNpubLink);
-
-            var createAliasLink = document.createElement("p");
-            createAliasLink.innerText = "edit user alias";
-
-            createAliasLink.onclick = function () {
-              var inputElement = document.createElement("input");
-              inputElement.value = msg[1].substring(0, 26) + "...";
-              inputElement.className = "alias-input";
-
-              var saveButton = document.createElement("button");
-              saveButton.innerHTML = "Save";
-              saveButton.className = "save-button";
-
-              saveButton.onclick = saveAlias;
-              inputElement.onkeypress = function (e) {
-                if (e.key === "Enter") {
-                  saveAlias();
-                }
-              };
-
-              function saveAlias() {
-                var alias = inputElement.value;
-                console.log("Alias saved:", alias);
-
-                // assuming you have an aliases object for storage
-                aliases[msg[1]] = alias;
-
-                // Save aliases back to localStorage
-                localStorage.setItem("aliases", JSON.stringify(aliases));
-
-                // create a new span
-                var newSpan = document.createElement("span");
-                newSpan.innerText = alias;
-
-                // replace the input field and button with the new span
-                div.replaceChild(newSpan, inputElement);
-                div.removeChild(saveButton);
-              }
-
-              // This will replace the pubkey span with the input field and save button
-              div.replaceChild(inputElement, span1);
-              div.appendChild(saveButton); // append the save button next to the input field
-
-              // Auto focus on the new input field
-              inputElement.focus();
-            };
-
-            dropdownContent.appendChild(createAliasLink);
-
-            wrapper.appendChild(dropdownContent);
-            div.appendChild(wrapper);
-          }
 
           var pElement = document.createElement("p");
           pElement.innerText = msg[0];
@@ -406,6 +325,11 @@
               : msg[1].substring(0, 26) + "...";
           div.appendChild(span1);
 
+          if (div.classList.contains("peer-message")) {
+            var dropdown = createDropdown(msg, div, span1);
+            div.appendChild(dropdown);
+          }
+
           var span2 = document.createElement("span");
           span2.classList.add("timestamp");
           span2.setAttribute("data-timestamp", msg[2]);
@@ -418,6 +342,91 @@
         // Scroll to bottom of chat
         var messageBox = document.querySelector(".messages");
         messageBox.scrollTop = messageBox.scrollHeight;
+      };
+
+      var createDropdown = (msg, div, span1) => {
+        var wrapper = document.createElement("div");
+        wrapper.className = "options-wrapper";
+
+        var button = document.createElement("button");
+        button.className = "options-button";
+        button.innerHTML = "...";
+        button.onclick = function () {
+          this.nextSibling.classList.toggle("show");
+        };
+        wrapper.appendChild(button);
+
+        var dropdownContent = document.createElement("div");
+        dropdownContent.className = "dropdown-content";
+
+        var copyNpubLink = document.createElement("p");
+        copyNpubLink.innerText = "copy npub";
+
+        copyNpubLink.onclick = function () {
+          navigator.clipboard.writeText(pubkeyToNpub(msg[1])).then(
+            () => {
+              console.log("Public key copied to clipboard");
+            },
+            (err) => {
+              console.error("Could not copy text: ", err);
+            }
+          );
+        };
+
+        dropdownContent.appendChild(copyNpubLink);
+
+        var createAliasLink = document.createElement("p");
+        createAliasLink.innerText = "edit user alias";
+
+        createAliasLink.onclick = function () {
+          var inputElement = document.createElement("input");
+          inputElement.value = msg[1].substring(0, 26) + "...";
+          inputElement.className = "alias-input";
+
+          var saveButton = document.createElement("button");
+          saveButton.innerHTML = "Save";
+          saveButton.className = "save-button";
+
+          saveButton.onclick = saveAlias;
+          inputElement.onkeypress = function (e) {
+            if (e.key === "Enter") {
+              saveAlias();
+            }
+          };
+
+          function saveAlias() {
+            var alias = inputElement.value;
+            console.log("Alias saved:", alias);
+
+            // assuming you have an aliases object for storage
+            aliases[msg[1]] = alias;
+
+            // Save aliases back to localStorage
+            localStorage.setItem("aliases", JSON.stringify(aliases));
+
+            // create a new span
+            var newSpan = document.createElement("span");
+            newSpan.innerText = alias;
+
+            // replace the input field and button with the new span
+
+            div.replaceChild(newSpan, inputElement);
+            div.removeChild(saveButton);
+          }
+
+          // This will replace the pubkey span with the input field and save button
+          div.replaceChild(inputElement, span1);
+          div.appendChild(saveButton); // append the save button next to the input field
+
+          // Auto focus on the new input field
+          inputElement.focus();
+        };
+
+        dropdownContent.appendChild(createAliasLink);
+
+        wrapper.appendChild(dropdownContent);
+
+        return wrapper;
       };
 
       function formatTimestamp(timestamp) {
@@ -450,17 +459,17 @@
       setTimeout(updateTimestamps, 60 * 1000); // Start after 1 minute delay
       setInterval(updateTimestamps, 60 * 1000); // Then run every minute
 
-      var roundToOneFourOrSeven = num => {
-          if ( num >= 0 && num < 3 ) num = 1;
-          if ( num >= 3 && num < 6 ) num = 4;
-          if ( num >= 6 ) num = 7;
-          return num;
-      }
+      var roundToOneFourOrSeven = (num) => {
+        if (num >= 0 && num < 3) num = 1;
+        if (num >= 3 && num < 6) num = 4;
+        if (num >= 6) num = 7;
+        return num;
+      };
       var getRandomHex = () => {
-          var hex = bytesToHex( window.crypto.getRandomValues( new Uint8Array( 1 ) ) );
-          if ( hex === "00" ) return getRandomHex();
-          return hex;
-      }
+        var hex = bytesToHex(window.crypto.getRandomValues(new Uint8Array(1)));
+        if (hex === "00") return getRandomHex();
+        return hex;
+      };
 
       window.onclick = function (event) {
         if (!event.target.matches(".options-button")) {
@@ -508,96 +517,102 @@
           real_pubKey = pk;
         }
       };
-      var messageMaker = async ( once, msg, timestamp ) => {
-          if ( !shared_secret ) {
-              await waitSomeSeconds( 1 );
-              if ( !once ) messageMaker();
-              return;
-          }
-          keypair = bitcoinjs.ECPair.makeRandom();
-          privKey = keypair.privateKey.toString( "hex" );
-          pubKey  = keypair.publicKey.toString( "hex" ).substring( 2 );
-          var padding = "0".repeat( 1000 );
-          if ( !msg ) {
-              var original_array = message_queue.pop() || "";
-              if ( original_array ) {
-                  var original_message = original_array[ 0 ];
-                  var original_timestamp = original_array[ 1 ];
-              } else {
-                  var original_message = "";
-                  var original_timestamp = 1234567890;
-              }
+      var messageMaker = async (once, msg, timestamp) => {
+        if (!shared_secret) {
+          await waitSomeSeconds(1);
+          if (!once) messageMaker();
+          return;
+        }
+        keypair = bitcoinjs.ECPair.makeRandom();
+        privKey = keypair.privateKey.toString("hex");
+        pubKey = keypair.publicKey.toString("hex").substring(2);
+        var padding = "0".repeat(1000);
+        if (!msg) {
+          var original_array = message_queue.pop() || "";
+          if (original_array) {
+            var original_message = original_array[0];
+            var original_timestamp = original_array[1];
           } else {
-              var original_message = msg;
-              var original_timestamp = timestamp;
+            var original_message = "";
+            var original_timestamp = 1234567890;
           }
-          var message = padding + textToHex( original_message );
-          message = message.substring( message.length - 1000 );
-          message = message.match(/(..?)/g);
-          var index_of_last_zero = -1;
-          message.reverse();
-          message.every( ( char, index ) => {
-              if ( char === "00" ) {
-                  index_of_last_zero = 500 - index;
-                  return;
-              }
-              return true;
-          });
-          message.reverse();
-          message.splice( 0, index_of_last_zero - 1 );
-          var i; for ( i=0; i<index_of_last_zero - 1; i++ ) message.unshift( getRandomHex() );
-          message = message.join( "" );
-          //sign the real version of the event
-          var event = {
-              "content"    : original_message,
-              "created_at" : original_timestamp,
-              "kind"       : 4,
-              "tags"       : [ [ "p", shared_pub ] ],
-              "pubkey"     : real_pubKey,
+        } else {
+          var original_message = msg;
+          var original_timestamp = timestamp;
+        }
+        var message = padding + textToHex(original_message);
+        message = message.substring(message.length - 1000);
+        message = message.match(/(..?)/g);
+        var index_of_last_zero = -1;
+        message.reverse();
+        message.every((char, index) => {
+          if (char === "00") {
+            index_of_last_zero = 500 - index;
+            return;
           }
-          if ( window.nostr ) {
-              var signedEvent = await window.nostr.signEvent( event );
-              if ( typeof( signedEvent ) == "string" ) {
-                  event.sig = signedEvent;
-              } else {
-                  event.sig = signedEvent.sig;
-              }
+          return true;
+        });
+        message.reverse();
+        message.splice(0, index_of_last_zero - 1);
+        var i;
+        for (i = 0; i < index_of_last_zero - 1; i++)
+          message.unshift(getRandomHex());
+        message = message.join("");
+        //sign the real version of the event
+        var event = {
+          content: original_message,
+          created_at: original_timestamp,
+          kind: 4,
+          tags: [["p", shared_pub]],
+          pubkey: real_pubKey,
+        };
+        if (window.nostr) {
+          var signedEvent = await window.nostr.signEvent(event);
+          if (typeof signedEvent == "string") {
+            event.sig = signedEvent;
           } else {
-              var signedEvent = await getSignedEvent( event, real_privKey );
+            event.sig = signedEvent.sig;
           }
-          var sig = signedEvent.sig;
-          message = message + sig + real_pubKey;
-          var div = document.createElement( "div" );
-          div.innerText = message;
-          div.className = "message";
-          $( '.invisible_messages' ).prepend( div );
-          //sign the padded version of the event
-          encrypted_msg = encrypt( shared_secret, pubKey, message );
-          var event = {
-              "content"    : encrypted_msg,
-              "created_at" : original_timestamp,
-              "kind"       : 4,
-              "tags"       : [ [ "p", shared_pub ] ],
-              "pubkey"     : pubKey,
-          }
-          var publishable_signed_event = await getSignedEvent( event, privKey );
-          if ( !once ) socket.send(JSON.stringify([ "EVENT", publishable_signed_event ]));
-          if ( original_message ) {
-              var real_msg = await detectRealMessage( event );
-          } else {
-              var real_msg = [""];
-          }
-          if ( !real_msg[ 0 ] || displayed_msgs.includes( publishable_signed_event[ "id" ] ) ) {
-              await waitSomeSeconds( 3 );
-              if ( !once ) messageMaker();
-              return;
-          }
-          displayed_msgs.push( publishable_signed_event[ "id" ] );
-          real_messages.push( real_msg );
-          populateRealMessages();
-          await waitSomeSeconds( 3 );
-          if ( !once ) messageMaker();
-      }
+        } else {
+          var signedEvent = await getSignedEvent(event, real_privKey);
+        }
+        var sig = signedEvent.sig;
+        message = message + sig + real_pubKey;
+        var div = document.createElement("div");
+        div.innerText = message;
+        div.className = "message";
+        $(".invisible_messages").prepend(div);
+        //sign the padded version of the event
+        encrypted_msg = encrypt(shared_secret, pubKey, message);
+        var event = {
+          content: encrypted_msg,
+          created_at: original_timestamp,
+          kind: 4,
+          tags: [["p", shared_pub]],
+          pubkey: pubKey,
+        };
+        var publishable_signed_event = await getSignedEvent(event, privKey);
+        if (!once)
+          socket.send(JSON.stringify(["EVENT", publishable_signed_event]));
+        if (original_message) {
+          var real_msg = await detectRealMessage(event);
+        } else {
+          var real_msg = [""];
+        }
+        if (
+          !real_msg[0] ||
+          displayed_msgs.includes(publishable_signed_event["id"])
+        ) {
+          await waitSomeSeconds(3);
+          if (!once) messageMaker();
+          return;
+        }
+        displayed_msgs.push(publishable_signed_event["id"]);
+        real_messages.push(real_msg);
+        populateRealMessages();
+        await waitSomeSeconds(3);
+        if (!once) messageMaker();
+      };
       $(".submit").onclick = () => {
         shared_secret = $(".shared_secret").value;
         shared_pub = nobleSecp256k1
@@ -615,11 +630,14 @@
       };
       $(".send").onclick = () => {
         var msg = $(".msg").value;
-        if (msg.length > 500) {
-          alert("Your message is too long");
-          return;
+        if (msg.length > 0) {
+          if (msg.length > 500) {
+            alert("Your message is too long");
+            return;
+          }
+          send(msg);
+          $(".msg").value = "";
         }
-        send(msg);
       };
       $(".msg").onkeyup = () => {
         var msg = $(".msg").value;
@@ -629,6 +647,15 @@
         var msg = $(".msg").value;
         console.log(msg.length);
       };
+      $(".msg").addEventListener("keyup", function (event) {
+        // Number 13 is the "Enter" key on the keyboard
+        if (event.keyCode === 13) {
+          // Cancel the default action, if needed
+          event.preventDefault();
+          // Trigger the button element with a click
+          $(".send").click();
+        }
+      });
       $(".gen_nsec").onclick = () => {
         var sec_key = bytesToHex(nobleSecp256k1.utils.randomPrivateKey());
         $(".nsec").value = privkeyToNsec(sec_key);
