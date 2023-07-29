@@ -33,6 +33,6 @@ A group creator creates a "chat string" -- i.e. a shared secret -- and sends it 
 
 (2) User identities -- all keys rotate constantly and users connect via tor
 
-(3) Message frequency -- all messages are queued for fixed frequency and use padding to "blend in" with junk messages
+(3) Message frequency -- real messages are queued with junk messages and padded to the same size, then sent out with fixed frequency so they blend in
 
 Also, the shared secret allows any number of people to use Pulsar to communicate with one another, be they 2, 3, 10, 2,000 or whatever. Thus Pulsar fulfills the terms of the bounty.
