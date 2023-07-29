@@ -13,7 +13,7 @@ Our production version, on tor, **protects your ip address**: http://kzthpkengwz
 # Why did you make this?
 The human rights foundation [posted](https://bitcoinmagazine.com/business/human-rights-foundation-announces-20-btc-bounty-challenge-for-bitcoin-development) the following bounty:
 
-> The third bounty is another 2 BTC reward for the creation of a Nostr client implementation of end to end encrypted group chats which is incapable of leaking metadata to potentially malicious third parties. In order to be eligible, the group chat must enable three or more users to communicate, with no ability for outside adversaries to gather the content of the messages, nor the identity or frequency of the users messaging.
+> 2 BTC for the creation of end to end encrypted group chats powered by any popular Nostr client that does not leak metadata to third parties. Users must be able to chat with at least two other Nostr users. Outside observers must not be able to see the content of messages, the sender/recipient of messages, or the total number of messages between recipients.
 
 Consequently, my goals are:
 
@@ -21,7 +21,7 @@ Consequently, my goals are:
 
 (2) outside observers cannot see user identities
 
-(3) outside observers cannot see message frequency
+(3) outside observers cannot see number of messages
 
 (4) three or more users can communicate
 
@@ -33,19 +33,19 @@ A group creator creates a "chat string" -- i.e. a shared secret -- and sends it 
 
 (2) User identities -- all keys rotate constantly and users connect via tor
 
-(3) Message frequency -- real messages are queued with junk messages and padded to the same size, then sent out with fixed frequency so they blend in (but see #6 in the section below this one -- attackers can currently exploit the encryption method to discover messsage frequency and message length, and that must be fixed)
+(3) Number of messages -- real messages are queued with junk messages and padded to the same size, then sent out with fixed frequency so they blend in (but see #6 in the section below this one -- attackers can currently exploit the encryption method to discover message frequency, message length, and number of messages -- and that must be fixed)
 
 Also, the shared secret allows any number of people to use Pulsar to communicate with one another, be they 2, 3, 10, 2,000 or whatever. Thus Pulsar fulfills the terms of the bounty.
 
 # What metadata can outside observers still detect?
 (1) Each group has a "shared public key" which all in-group messages reference in each of their messages. Observers can detect all references to this shared public key
 
-(2) Observers can detect, at any given time, how many people are sending fixed-frequency messages that reference a group's shared public key, and treat these as messages to everyone in the group
+(2) Observers can detect, at any given time, how many people are sending messages that reference a group's shared public key, and treat these as messages to everyone in the group
 
-(3) Observers can treat the moment you start sending messages to a group as a "log in" moment and the moment you stop as a "log out" moment
+(3) Observers can treat the moment you start sending messages to a group as a "log in" moment and the moment you stop as a "log out" moment, thus getting an upper bound on the number of messages you sent, though this would not tell them the *actual* number of messages you sent
 
-(4) Observers can combine the previous data points and use heuristics to guess how many people are probably in a group and their possible time zones. For example: "5 people logged in to the same group during primetime in the Eastern time zone. 2 people logged into the same group and talked during primetime in the Western European time zone. So there are probably 7 people in the group in two different time zones."
+(4) Observers can combine the previous data points and use heuristics to guess how many people are probably in a group and their possible time zones. For example: "5 people logged in to the same group during primetime in the Eastern USA time zone. 2 people logged into the same group during primetime in the Western European time zone. So there are probably 7 people in the group in two different time zones."
 
 (5) Observers can see that the maximum size of any message is about 1000 characters
 
-(6) The AES-CBC encryption standard, as implemented by nip4 and therefore Pulsar, uses an "initialization vector" to encrypt messages in blocks. One attack against this encryption standard involves guessing the contents of an encrypted block, then using the initialization vector as a kind of checksum to see if your guess was correct. Guessing correctly is often easy to do if the messages follow a preknown format. For example, Pulsar currently uses 0-value byte vectors to pad real messages, and junk messages are basically just 1000 0-value byte vectors. Since the way Pulsar produces padding and junk has a known pattern, an attacker can take each encrypted block, "guess" that it's a bunch of zeroes, and use the intiialization vector to check if their guess is correct. If it is, they can discard that padding. This attack allows an observer to identify and discard all "junk" messages, and also identify and discard almost all of the padding in a real message. This attack thus reveals the frequency of real messages as well as their length. There are two easy ways to fix it, though: (1) use random byte vectors, not 0-value byte vectors, as padding (2) use a different encryption scheme. We intend to shortly mitigate this attack using option (1).
+(6) The AES-CBC encryption standard, as implemented by nip4 and therefore Pulsar, uses an "initialization vector" to encrypt messages in blocks. One attack against this encryption standard involves guessing the contents of an encrypted block, then using the initialization vector as a kind of checksum to see if your guess was correct. Guessing correctly is often easy to do if the messages follow a preknown format. For example, Pulsar currently uses 0-value byte vectors to pad real messages, and junk messages are basically just 1000 0-value byte vectors. Since the way Pulsar produces padding and junk has a known pattern, an attacker can take each encrypted block, "guess" that it's a bunch of zeroes, and use the intiialization vector to check if their guess is correct. If it is, they can discard that padding. This attack allows an observer to identify and discard all "junk" messages, and also identify and discard almost all of the padding in a real message. This attack thus reveals the number of real messages as well as their length. There are two easy ways to fix it, though: (1) use random byte vectors, not 0-value byte vectors, as padding (2) use a different encryption scheme. We intend to shortly mitigate this attack using option (1).
