@@ -2,7 +2,7 @@
 My submission for the HRF's encrypted group chat bounty
 
 # What is this?
-Pulsar is an encrypted chat app that masks all your metadata except your ip address. It works by sending fixed-length, fixed-frequency messages over the nostr messaging network.
+Pulsar is an encrypted chat app that masks all metadata. It works by sending fixed-length, fixed-frequency messages over the nostr messaging network.
 
 # How to try it
 
