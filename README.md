@@ -42,10 +42,10 @@ Also, the shared secret allows any number of people to use Pulsar to communicate
 
 (2) Observers can detect, at any given time, how many people are sending messages that reference a group's shared public key, and treat these as messages to everyone in the group
 
-(3) Observers can treat the moment you start sending messages to a group as a "log in" moment and the moment you stop as a "log out" moment, thus getting an upper bound on the number of messages you sent, though this would not tell them the *actual* number of messages you sent
+(3) Observers can detect when someone starts sending messages to a group and when they stop. For example, if they observe that there were 6 messages going to the group every 3 seconds, but then suddenly there are 7, that probably means a new person entered the group
 
-(4) Observers who control one of the relays users connect to can additionally see when websocket connections are opened and closed, and treat those as additional data points about when people log in and log out
+(4) Observers can treat the time period during which someone is sending messages to a group as a "session." They can detect the duration of each session and track its start and stop time to identify the likeliest time zones that every group member lives in
 
-(5) Observers can combine the previous data points and use heuristics to guess how many people are probably in a group and their possible time zones. For example: "5 people logged in to the same group during primetime in the Eastern USA time zone. 2 people logged into the same group during primetime in the Western European time zone. So there are probably 7 people in the group in two different time zones."
+(5) Because each session sends a message every 3 seconds, and never varies from that, observers can get an upper bound on the number of messages you sent during your session. E.g. if your session lasted 1 hour, they know that there are 3600 seconds in 1 hour, meaning your client sent a total of 1200 messages during your session. They know that most of those messages were probably junk messages, but some of them could have been real. So the maximum number of real messages you could have sent during your session is 1200 -- that's the "upper bound." Note that this would only give them an upper bound on how many messages you *could* have sent during your session. It would not tell them the *actual* number of real messages you sent
 
-(6) Observers know in advance that the maximum size of any message is about 1000 characters
+(6) Observers who control one of the relays users connect to can additionally see when websocket connections are opened and closed, and treat those as additional data points about when people log in and log out
