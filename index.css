@@ -13,9 +13,11 @@ html {
 }
 body {
   max-width: 80ch;
-  height: 100%;
+  height: 100vh;
   padding: 0.5rem;
   margin: auto;
+  display: flex;
+  flex-direction: column;
 }
 h1 {
   font-size: 2rem;
@@ -73,14 +75,15 @@ button:hover {
   display: none;
 }
 
-.messages-wrapper {
+.messenger {
   position: relative;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  flex-grow: 1;
 }
 
 .messages {
-  height: calc(100% - 10rem);
-  width: 100%;
+  height: calc(100% - 5rem);
   margin: 0 auto;
   padding: 3%;
   display: flex;
@@ -89,6 +92,7 @@ button:hover {
   overflow-y: auto;
   border-bottom: 1px solid grey;
   position: absolute;
+  width: 100%;
 }
 
 .user-message {
