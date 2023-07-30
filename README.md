@@ -40,7 +40,7 @@ Also, the shared secret allows any number of people to use Pulsar to communicate
 # What metadata can outside observers still detect?
 (1) Each group has a "shared public key" which all in-group messages reference in each of their messages. Observers can detect all references to this shared public key
 
-(2) Observers can detect, at any given time, how many people are sending messages that reference a group's shared public key, and treat these as messages to everyone in the group
+(2) Observers can detect, at any given time, how many people are sending messages that reference a group's shared public key, and use that to estimate how many people are in a group
 
 (3) Observers can detect when someone starts sending messages to a group and when they stop. For example, if they observe that there were 6 messages going to the group every 3 seconds, but then suddenly there are 7, that probably means a new person entered the group
 
