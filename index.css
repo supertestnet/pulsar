@@ -49,6 +49,10 @@ button:hover {
 }
 
 .button-input-row {
+  position: absolute;
+  bottom: 20px;
+  left: 14%;
+  right: 14%;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -69,21 +73,22 @@ button:hover {
   display: none;
 }
 
+.messages-wrapper {
+  position: relative;
+  height: 100vh;
+}
+
 .messages {
-  margin: 1% auto;
-  height: 75vh;
+  height: calc(100% - 10rem);
   width: 100%;
+  margin: 0 auto;
+  padding: 3%;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   overflow-y: auto;
-  padding: 1rem;
-  box-shadow: 0px 10px 13px -7px #000000, 5px 5px 15px 5px rgba(0, 0, 0, 0.5);
-  background-image: linear-gradient(
-    147deg,
-    rgba(0, 0, 0, 0.8) 0%,
-    rgba(67, 67, 67, 0.8) 74%
-  );
+  border-bottom: 1px solid grey;
+  position: absolute;
 }
 
 .user-message {
@@ -91,8 +96,9 @@ button:hover {
   border: 1px solid ghostwhite;
   border-radius: 7px;
   margin-top: 2%;
-  padding: 0.5rem 1rem;
+  padding: 0.2rem 0.5rem;
   word-wrap: break-word;
+  align-self: flex-end;
 }
 
 .user-message span,
@@ -100,6 +106,7 @@ button:hover {
   display: flex;
   flex-direction: column;
   font-size: 0.8rem;
+  color: lightgrey;
 }
 
 .peer-message {
@@ -108,9 +115,8 @@ button:hover {
   border: 1px solid ghostwhite;
   border-radius: 7px;
   margin-top: 2%;
-  padding: 1rem;
+  padding: 0.2rem 0.5rem;
   word-wrap: break-word;
-  align-self: flex-end;
 }
 
 .options-button {
@@ -133,6 +139,7 @@ button:hover {
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
   z-index: 1;
   color: black;
+  border-radius: 5px;
 }
 
 .dropdown-content p {
@@ -205,4 +212,12 @@ button:hover {
 }
 
 @media screen and (max-width: 600px) {
+  * {
+    font-size: 1rem;
+  }
+  .button-input-row {
+    left: 4%;
+    right: 4%;
+    margin-top: 0.2rem;
+  }
 }
