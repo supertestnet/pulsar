@@ -613,8 +613,8 @@
         document.getElementById("toggle-chat-string").classList.add("hidden");
         document.getElementById("chat-list").classList.add("hidden");
         document
-          .getElementsByClassName("chat-list-wrapper")
-          .classList.add("hidden");
+          .getElementsByClassName("chat-list-wrapper")[0]
+          .getElementsByTagName("p")[0].style.display = "none";
       }
 
       function showChatListAndCreation() {
