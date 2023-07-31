@@ -504,6 +504,16 @@
         }
       };
     </script>
+    <script>
+      window.addEventListener("resize", setBodyHeight);
+
+      function setBodyHeight() {
+        // set the height of the body
+        document.body.style.height = `${window.innerHeight}px`;
+      }
+
+      setBodyHeight();
+    </script>
   </head>
   <body>
     <h1>Pulsar</h1>
