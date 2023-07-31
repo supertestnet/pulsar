@@ -224,10 +224,7 @@ button:hover {
     right: 4%;
     margin-top: 0.2rem;
   }
-  .messages {
-    height: 80%;
-  }
-  .messenger {
-    height: 80%;
+  .body {
+    height: 100%;
   }
 }
