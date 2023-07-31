@@ -224,9 +224,4 @@ button:hover {
     right: 4%;
     margin-top: 0.2rem;
   }
-  body {
-    height: calc(
-      100vh - 60px
-    ); /* 60px generally enough to compensate for the URL bar */
-  }
 }
