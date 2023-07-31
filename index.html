@@ -533,7 +533,6 @@
           button.textContent = "Enter";
           button.className = "enter-chat-button";
           button.onclick = function () {
-            if (window.nostr) return;
             // hide the enter chat button
             button.classList.add("hidden");
 
@@ -598,6 +597,9 @@
         document.getElementById("chat-string-form").classList.add("hidden");
         document.getElementById("toggle-chat-string").classList.add("hidden");
         document.getElementById("chat-list").classList.add("hidden");
+        document
+          .getElementsByClassName("chat-list-wrapper")
+          .classList.add("hidden");
       }
 
       function showChatListAndCreation() {
@@ -648,7 +650,7 @@
     <h1>Pulsar</h1>
     <button id="toggle-chat-string" class="toggle-button">Create Chat</button>
     <div id="chat-string-form" class="chat_string hidden">
-      <p>Enter your chat string</p>
+      <p>Enter your generated chat string</p>
       <p><input class="shared_secret" /></p>
       <div class="nsec_div">
         <p>Enter your nsec</p>
