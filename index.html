@@ -567,6 +567,7 @@
               // Enter messenger view
               hideChatListAndCreation();
 
+              if (window.nostr) return;
               real_privKey = privkeyFromNsec(chatNsec);
 
               real_pubKey = nobleSecp256k1
