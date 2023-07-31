@@ -624,9 +624,16 @@
         document
           .getElementsByClassName("chat-list-wrapper")[0]
           .classList.add("hidden");
-        document
-          .getElementsByClassName("chat-list-wrapper")[0]
-          .getElementsByTagName("p")[0].style.display = "none";
+        // only remove the p element if it exists
+        if (
+          document
+            .getElementsByClassName("chat-list-wrapper")[0]
+            .getElementsByTagName("p")[0]
+        ) {
+          document
+            .getElementsByClassName("chat-list-wrapper")[0]
+            .getElementsByTagName("p")[0].style.display = "none";
+        }
       }
 
       function showChatListAndCreation() {
