@@ -224,4 +224,7 @@ button:hover {
     right: 4%;
     margin-top: 0.2rem;
   }
+  body {
+    padding-bottom: 0;
+  }
 }
