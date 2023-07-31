@@ -13,7 +13,7 @@ html {
 }
 body {
   max-width: 80ch;
-  height: 100vh;
+  height: 100%;
   padding: 0.5rem;
   margin: auto;
   display: flex;
