@@ -34,13 +34,52 @@ input {
   color: black;
 }
 
+span {
+  font-size: 0.8rem;
+}
+
 button:hover {
+  opacity: 0.7;
+}
+
+.chat-list-wrapper {
+  margin-top: 2%;
+  margin-bottom: 1%;
+}
+
+.chat-list-wrapper p {
+  text-align: center;
+}
+
+.chat {
+  position: relative;
+  width: 100%;
+  border: 1px solid ghostwhite;
+  border-radius: 7px;
+  margin-top: 2%;
+  padding: 0.2rem 0.5rem;
+  word-wrap: break-word;
+}
+
+.enter-chat-button {
+  margin: 1%;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  color: ghostwhite;
+  background-color: green;
+  border: 1px solid ghostwhite;
+  border-radius: 10px;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.enter-chat-button:hover {
   opacity: 0.7;
 }
 
 .submit,
 .gen_nsec,
 .generate,
+.chat-submit-button,
 .send {
   padding: 0.5rem 1rem;
   border: 1px solid ghostwhite;
@@ -48,6 +87,11 @@ button:hover {
   background-color: #0cbaba;
   background-image: linear-gradient(315deg, #0cbaba 0%, #380036 74%);
   cursor: pointer;
+}
+
+.chat-submit-button {
+  margin-top: 2%;
+  margin-bottom: 2%;
 }
 
 .button-input-row {
@@ -73,6 +117,20 @@ button:hover {
 
 .hidden {
   display: none;
+}
+
+.toggle-button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  color: ghostwhite;
+  background-color: green;
+  border: 1px solid ghostwhite;
+  border-radius: 10px;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.toggle-button:hover {
+  opacity: 0.7;
 }
 
 .messenger {
