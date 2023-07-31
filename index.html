@@ -533,6 +533,21 @@
           button.textContent = "Enter";
           button.className = "enter-chat-button";
           button.onclick = function () {
+            if (window.nostr) {
+              shared_secret = chat;
+
+              shared_pub = nobleSecp256k1
+                .getPublicKey(shared_secret, true)
+                .substring(2);
+              $(".chat_string").classList.add("hidden");
+              $(".messenger").classList.remove("hidden");
+
+              // Enter messenger view
+              hideChatListAndCreation();
+
+              return;
+            }
+
             // hide the enter chat button
             button.classList.add("hidden");
 
@@ -567,7 +582,6 @@
               // Enter messenger view
               hideChatListAndCreation();
 
-              if (window.nostr) return;
               real_privKey = privkeyFromNsec(chatNsec);
 
               real_pubKey = nobleSecp256k1
