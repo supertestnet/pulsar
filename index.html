@@ -379,48 +379,55 @@
         createAliasLink.innerText = "edit user alias";
 
         createAliasLink.onclick = function () {
+          // Hide the current alias
+          span1.style.display = "none";
+
           var inputElement = document.createElement("input");
-          inputElement.value = msg[1].substring(0, 26) + "...";
+          inputElement.value = aliases[msg[1]] || "";
           inputElement.className = "alias-input";
 
           var saveButton = document.createElement("button");
           saveButton.innerHTML = "Save";
           saveButton.className = "save-button";
 
-          saveButton.onclick = saveAlias;
+          var buttonWrapper = document.createElement("div");
+          buttonWrapper.appendChild(inputElement);
+          buttonWrapper.appendChild(saveButton);
+
+          saveButton.onclick = function () {
+            saveAlias(inputElement, buttonWrapper, span1);
+          };
           inputElement.onkeypress = function (e) {
             if (e.key === "Enter") {
-              saveAlias();
+              saveAlias(inputElement, buttonWrapper, span1);
             }
           };
 
-          function saveAlias() {
-            var alias = inputElement.value;
-            console.log("Alias saved:", alias);
-
-            // assuming you have an aliases object for storage
-            aliases[msg[1]] = alias;
-
-            // Save aliases back to localStorage
-            localStorage.setItem("aliases", JSON.stringify(aliases));
-
-            // create a new span
-            var newSpan = document.createElement("span");
-            newSpan.innerText = alias;
-
-            // replace the input field and button with the new span
-
-            div.replaceChild(newSpan, inputElement);
-            div.removeChild(saveButton);
-          }
-
-          // This will replace the pubkey span with the input field and save button
-          div.replaceChild(inputElement, span1);
-          div.appendChild(saveButton); // append the save button next to the input field
+          // Append the wrapper and show it
+          div.appendChild(buttonWrapper);
+          buttonWrapper.style.display = "block";
 
           // Auto focus on the new input field
           inputElement.focus();
         };
+
+        function saveAlias(inputElement, buttonWrapper, span) {
+          var alias = inputElement.value;
+          console.log("Alias saved:", alias);
+
+          // assuming you have an aliases object for storage
+          aliases[msg[1]] = alias;
+
+          // Save aliases back to localStorage
+          localStorage.setItem("aliases", JSON.stringify(aliases));
+
+          // Update span with new alias
+          span.innerText = alias;
+
+          // Hide the input field and button, show the span
+          buttonWrapper.style.display = "none";
+          span.style.display = "block";
+        }
 
         dropdownContent.appendChild(createAliasLink);
 
