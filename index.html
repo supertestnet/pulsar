@@ -312,10 +312,6 @@
             ? div.classList.add("user-message")
             : div.classList.add("peer-message");
 
-          var pElement = document.createElement("p");
-          pElement.innerText = msg[0];
-          div.appendChild(pElement);
-
           var span1 = document.createElement("span");
           span1.innerText =
             aliases[msg[1]] !== undefined
@@ -329,6 +325,10 @@
             var dropdown = createDropdown(msg, div, span1);
             div.appendChild(dropdown);
           }
+
+          var pElement = document.createElement("p");
+          pElement.innerText = msg[0];
+          div.appendChild(pElement);
 
           var span2 = document.createElement("span");
           span2.classList.add("timestamp");

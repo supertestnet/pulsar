@@ -1,6 +1,6 @@
 * {
   box-sizing: border-box;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-family: "Chakra Petch", sans-serif;
   color: ghostwhite;
 }
@@ -154,31 +154,74 @@ button:hover {
 }
 
 .user-message {
-  width: 80%;
-  border: 1px solid ghostwhite;
+  width: fit-content;
+  max-width: 80%;
+  min-width: 35%;
   border-radius: 7px;
   margin-top: 2%;
   padding: 0.2rem 0.5rem;
   word-wrap: break-word;
   align-self: flex-end;
+  background-color: #4b6cf0;
+  position: relative;
+}
+
+.user-message:after {
+  content: "";
+  position: absolute;
+  bottom: 0%;
+  right: -20px;
+  margin-top: -5px;
+  width: 0;
+  height: 0;
+  border-top: 39px solid transparent;
+  border-left: 45px solid #4b6cf0;
+  border-radius: 10px;
+  z-index: -100;
 }
 
 .user-message span,
 .peer-message span {
-  display: flex;
-  flex-direction: column;
   font-size: 0.8rem;
-  color: lightgrey;
+  color: ghostwhite;
+}
+
+.user-message p,
+.peer-message p {
+  padding-bottom: 2%;
+}
+
+.timestamp {
+  position: absolute;
+  bottom: 2%;
+  right: 2%;
 }
 
 .peer-message {
   position: relative;
-  width: 80%;
-  border: 1px solid ghostwhite;
+  width: fit-content;
+  max-width: 80%;
+  min-width: 35%;
   border-radius: 7px;
   margin-top: 2%;
   padding: 0.2rem 0.5rem;
   word-wrap: break-word;
+  background-color: #3b2e2e;
+  position: relative;
+}
+
+.peer-message:after {
+  content: "";
+  position: absolute;
+  bottom: 0%;
+  left: -20px;
+  margin-top: -5px;
+  width: 0;
+  height: 0;
+  border-top: 39px solid transparent;
+  border-right: 45px solid #3b2e2e;
+  border-radius: 10px;
+  z-index: -100;
 }
 
 .options-button {
@@ -284,5 +327,8 @@ button:hover {
   }
   body {
     padding-bottom: 0;
+  }
+  .messages {
+    padding: 5%;
   }
 }
