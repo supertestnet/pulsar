@@ -331,4 +331,9 @@ button:hover {
   .messages {
     padding: 5%;
   }
+  .user-message,
+  .peer-message {
+    max-width: 90%;
+    min-width: 50%;
+  }
 }
