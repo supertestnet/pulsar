@@ -42,40 +42,6 @@ button:hover {
   opacity: 0.7;
 }
 
-.chat-list-wrapper {
-  margin-top: 2%;
-  margin-bottom: 1%;
-}
-
-.chat-list-wrapper p {
-  text-align: center;
-}
-
-.chat {
-  position: relative;
-  width: 100%;
-  border: 1px solid ghostwhite;
-  border-radius: 7px;
-  margin-top: 2%;
-  padding: 0.2rem 0.5rem;
-  word-wrap: break-word;
-}
-
-.enter-chat-button {
-  margin: 1%;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  color: ghostwhite;
-  background-color: green;
-  border: 1px solid ghostwhite;
-  border-radius: 10px;
-  cursor: pointer;
-  align-self: flex-start;
-}
-.enter-chat-button:hover {
-  opacity: 0.7;
-}
-
 .submit,
 .gen_nsec,
 .generate,

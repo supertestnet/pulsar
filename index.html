@@ -506,152 +506,6 @@
       };
     </script>
     <script>
-      function saveChat(chatString) {
-        // Get the existing data in local storage
-        let existingChats = localStorage.getItem("chats");
-        existingChats = existingChats ? JSON.parse(existingChats) : [];
-
-        // Check if chat already exists
-        if (!existingChats.includes(chatString)) {
-          // Add new chat string
-          existingChats.push(chatString);
-
-          // Save back to local storage
-          localStorage.setItem("chats", JSON.stringify(existingChats));
-        }
-      }
-
-      function loadChats() {
-        let chats = localStorage.getItem("chats");
-        chats = chats ? JSON.parse(chats) : [];
-        let chatList = document.getElementById("chat-list");
-
-        // Clear the existing chats from the list
-        chatList.innerHTML = "";
-
-        // If there are chats, add the "Previous chats" text
-        if (chats.length > 0) {
-          let chatListWrapper =
-            document.getElementsByClassName("chat-list-wrapper")[0];
-          let prevChatsText = document.createElement("p");
-          prevChatsText.textContent = "Previous chats";
-          chatListWrapper.insertBefore(prevChatsText, chatList);
-        }
-
-        // Add chats to the list
-        chats.forEach((chat) => {
-          let div = document.createElement("div");
-          div.className = "chat";
-          let p = document.createElement("p");
-          p.textContent = chat;
-          div.appendChild(p);
-          let button = document.createElement("button");
-          button.textContent = "Enter";
-          button.className = "enter-chat-button";
-          button.onclick = function () {
-            if (window.nostr) {
-              shared_secret = chat;
-
-              shared_pub = nobleSecp256k1
-                .getPublicKey(shared_secret, true)
-                .substring(2);
-              $(".chat_string").classList.add("hidden");
-              $(".messenger").classList.remove("hidden");
-
-              // Enter messenger view
-              hideChatListAndCreation();
-
-              return;
-            }
-
-            // hide the enter chat button
-            button.classList.add("hidden");
-
-            // Create a new div for chat input
-            let chatInputDiv = document.createElement("div");
-
-            // drop a message above the input that says 'you need to enter your nsec to re-enter this chat'
-            let chatNsecMessage = document.createElement("span");
-            chatNsecMessage.textContent = `You need to enter your nsec to re-enter this chat`;
-            chatInputDiv.appendChild(chatNsecMessage);
-
-            // Create an input field inside this div
-            let chatNsecInputField = document.createElement("input");
-            chatNsecInputField.type = "text";
-            chatNsecInputField.className = "nsec";
-            chatInputDiv.appendChild(chatNsecInputField);
-
-            // Create a submit button for this input
-            let chatSubmitButton = document.createElement("button");
-            chatSubmitButton.textContent = "Submit";
-            chatSubmitButton.className = "chat-submit-button";
-            chatSubmitButton.onclick = function () {
-              let chatNsec = chatNsecInputField.value;
-              shared_secret = chat;
-
-              shared_pub = nobleSecp256k1
-                .getPublicKey(shared_secret, true)
-                .substring(2);
-              $(".chat_string").classList.add("hidden");
-              $(".messenger").classList.remove("hidden");
-
-              // Enter messenger view
-              hideChatListAndCreation();
-
-              real_privKey = privkeyFromNsec(chatNsec);
-
-              real_pubKey = nobleSecp256k1
-                .getPublicKey(real_privKey, true)
-                .substring(2);
-
-              // clear the input field
-              chatNsecInputField.value = "";
-            };
-
-            chatInputDiv.appendChild(chatSubmitButton);
-
-            // Insert this div inside the chat div
-            div.appendChild(chatInputDiv);
-
-            // If nostr exists, hide the new chat input by default
-            if (window.nostr) {
-              chatInputDiv.style.display = "none";
-            }
-          };
-
-          div.appendChild(button);
-          chatList.appendChild(div);
-        });
-      }
-
-      function hideChatListAndCreation() {
-        document.getElementById("chat-string-form").classList.add("hidden");
-        document.getElementById("toggle-chat-string").classList.add("hidden");
-        document.getElementById("chat-list").classList.add("hidden");
-        document
-          .getElementsByClassName("chat-list-wrapper")[0]
-          .classList.add("hidden");
-        // only remove the p element if it exists
-        if (
-          document
-            .getElementsByClassName("chat-list-wrapper")[0]
-            .getElementsByTagName("p")[0]
-        ) {
-          document
-            .getElementsByClassName("chat-list-wrapper")[0]
-            .getElementsByTagName("p")[0].style.display = "none";
-        }
-      }
-
-      function showChatListAndCreation() {
-        document.getElementById("chat-string-form").classList.remove("hidden");
-        document
-          .getElementById("toggle-chat-string")
-          .classList.remove("hidden");
-        document.getElementById("chat-list").classList.remove("hidden");
-      }
-    </script>
-    <script>
       window.addEventListener("resize", setBodyHeight);
 
       function setBodyHeight() {
@@ -660,19 +514,6 @@
       }
 
       window.onload = async function () {
-        var chatStringForm = document.getElementById("chat-string-form");
-        var toggleButton = document.getElementById("toggle-chat-string");
-
-        toggleButton.onclick = function () {
-          if (chatStringForm.classList.contains("hidden")) {
-            chatStringForm.classList.remove("hidden");
-            toggleButton.innerText = "-";
-          } else {
-            chatStringForm.classList.add("hidden");
-            toggleButton.innerText = "+";
-          }
-        };
-
         if (window.nostr) {
           $(".nsec_div").classList.add("hidden");
           $(".gen_nsec").classList.add("hidden");
@@ -682,15 +523,12 @@
         }
 
         setBodyHeight();
-
-        loadChats(); // Load chat strings from localStorage
       };
     </script>
   </head>
   <body>
     <h1>Pulsar</h1>
-    <button id="toggle-chat-string" class="toggle-button">+</button>
-    <div id="chat-string-form" class="chat_string hidden">
+    <div id="chat-string-form" class="chat_string">
       <p>Enter your generated chat string</p>
       <p><input class="shared_secret" /></p>
       <div class="nsec_div">
@@ -702,9 +540,6 @@
         &nbsp;&nbsp;
         <button class="submit">Submit</button>
       </div>
-    </div>
-    <div class="chat-list-wrapper">
-      <div id="chat-list"></div>
     </div>
     <div class="messenger hidden">
       <div class="messages"></div>
@@ -818,11 +653,6 @@
           .substring(2);
         $(".chat_string").classList.add("hidden");
         $(".messenger").classList.remove("hidden");
-
-        saveChat(shared_secret); // Save chat string to localStorage
-
-        // Enter messenger view
-        hideChatListAndCreation();
 
         if (window.nostr) return;
         nsec = $(".nsec").value;
