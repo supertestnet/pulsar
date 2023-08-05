@@ -19,6 +19,12 @@ body {
   display: flex;
   flex-direction: column;
 }
+header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
 h1 {
   font-size: 2rem;
 }
@@ -40,6 +46,13 @@ span {
 
 button:hover {
   opacity: 0.7;
+}
+
+.title-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 .submit,
@@ -201,6 +214,14 @@ button:hover {
   text-align: right;
 }
 
+.chat-options-button {
+  border: none;
+  background: none;
+  color: white;
+  align-self: center;
+  cursor: pointer;
+}
+
 .dropdown-content {
   display: none;
   position: absolute;
@@ -228,6 +249,39 @@ button:hover {
 
 .show {
   display: block;
+}
+
+.dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.chat-dropdown-content {
+  display: none;
+  position: absolute;
+  right: 10%;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  padding: 0.5rem;
+  z-index: 1;
+}
+
+.chat-dropdown-content p {
+  color: black;
+  font-size: 0.8rem;
+  padding: 0 0.3rem;
+  text-decoration: none;
+  display: block;
+  cursor: pointer;
+}
+
+.chat-dropdown-content.show {
+  display: block;
+}
+
+.chat-dropdown-content p:hover {
+  opacity: 0.7;
 }
 
 .alias-input {
@@ -307,5 +361,48 @@ button:hover {
   }
   .timestamp {
     padding: 2%;
+  }
+
+  .chat-options-button {
+    top: 50%;
+  }
+}
+
+/* Animation */
+
+.lds-ripple {
+  display: inline-block;
+  position: relative;
+  width: 60px;
+  height: 60px;
+  padding: 0;
+}
+
+.lds-ripple div {
+  position: absolute;
+  border: 6px solid purple;
+  opacity: 1;
+  border-radius: 50%;
+  animation: lds-ripple 3s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.lds-ripple div:nth-child(2) {
+  animation-delay: -1.5s;
+}
+
+@keyframes lds-ripple {
+  0% {
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    opacity: 1;
+  }
+  100% {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
   }
 }

@@ -322,7 +322,7 @@
           div.appendChild(span1);
 
           if (div.classList.contains("peer-message")) {
-            var dropdown = createDropdown(msg, div, span1);
+            var dropdown = createMessageDropdown(msg, div, span1);
             div.appendChild(dropdown);
           }
 
@@ -344,7 +344,45 @@
         messageBox.scrollTop = messageBox.scrollHeight;
       };
 
-      var createDropdown = (msg, div, span1) => {
+      var createChatOptionsDropdown = () => {
+        console.log("here");
+        const header = document.getElementsByTagName("header")[0];
+
+        var wrapper = document.createElement("div"); // create a new wrapper element
+        wrapper.className = "dropdown-wrapper"; // assign a class for the wrapper
+
+        var button = document.createElement("button");
+        button.className = "chat-options-button";
+        button.innerHTML = "...";
+        button.onclick = function () {
+          this.nextSibling.classList.toggle("show");
+        };
+        wrapper.appendChild(button); // append the button to the wrapper
+
+        var dropdownContent = document.createElement("div");
+        dropdownContent.className = "chat-dropdown-content";
+
+        var chatInfo = document.createElement("p");
+        chatInfo.innerText = "chat info";
+        chatInfo.onclick = function () {
+          // Implement what should happen when 'chat info' is clicked
+        };
+        dropdownContent.appendChild(chatInfo);
+
+        var copyChatString = document.createElement("p");
+        copyChatString.innerText = "copy chat string";
+        copyChatString.onclick = function () {
+          // Implement what should happen when 'copy chat string' is clicked
+        };
+        dropdownContent.appendChild(copyChatString);
+
+        wrapper.appendChild(dropdownContent); // append the dropdown content to the wrapper
+        header.appendChild(wrapper); // append the wrapper to the header
+
+        return header;
+      };
+
+      var createMessageDropdown = (msg, div, span1) => {
         var wrapper = document.createElement("div");
         wrapper.className = "options-wrapper";
 
@@ -527,7 +565,15 @@
     </script>
   </head>
   <body>
-    <h1>Pulsar</h1>
+    <header>
+      <div class="title-container">
+        <h1>Pulsar</h1>
+        <div class="lds-ripple">
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+    </header>
     <div id="chat-string-form" class="chat_string">
       <p>Enter your generated chat string</p>
       <p><input class="shared_secret" /></p>
@@ -661,6 +707,12 @@
           .getPublicKey(real_privKey, true)
           .substring(2);
         console.log(real_pubKey);
+
+        // Generate options button for chat
+        var header = document.getElementsByTagName("header")[0];
+
+        var chatOptionsDropdown = createChatOptionsDropdown();
+        header.appendChild(chatOptionsDropdown);
       };
       $(".send").onclick = () => {
         var msg = $(".msg").value;
