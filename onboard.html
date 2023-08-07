@@ -66,14 +66,26 @@
     </script>
   </head>
   <body>
-    <h1>Pulsar</h1>
-    <p>
-      Please generate a chat string or <a class="clicker">click here</a> if
-      someone sent you one
-    </p>
-    <p>
-      <button class="generate">Generate</button>
-    </p>
+    <header>
+      <div class="title-container">
+        <h1>Pulsar</h1>
+        <div class="lds-ripple">
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+    </header>
+    <p class="subtitle">Privacy with a pulse</p>
+    <div class="landing-container">
+      <div class="hero-container">
+        <p>Generate a secret key for a new chat room</p>
+        <button class="generate">Generate</button>
+      </div>
+      <div class="hero-container">
+        <p>Enter an already created chat room with your secret key</p>
+        <button class="generate"><a class="clicker">Enter</a></button>
+      </div>
+    </div>
     <div
       style="
         flex-direction: column;
