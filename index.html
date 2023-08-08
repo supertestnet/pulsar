@@ -345,7 +345,6 @@
       };
 
       var createChatOptionsDropdown = () => {
-        console.log("here");
         const header = document.getElementsByTagName("header")[0];
 
         var wrapper = document.createElement("div"); // create a new wrapper element
@@ -365,16 +364,25 @@
         var chatInfo = document.createElement("p");
         chatInfo.innerText = "chat info";
         chatInfo.onclick = function () {
-          // Implement what should happen when 'chat info' is clicked
+          let unique_pubkeys = [...new Set(real_messages.map((msg) => msg[1]))];
+          showModal(`${unique_pubkeys.length} unique npubs in this chat`);
         };
+
         dropdownContent.appendChild(chatInfo);
 
         var copyChatString = document.createElement("p");
         copyChatString.innerText = "copy chat string";
         copyChatString.onclick = function () {
-          // Implement what should happen when 'copy chat string' is clicked
+          navigator.clipboard.writeText(shared_secret);
         };
         dropdownContent.appendChild(copyChatString);
+
+        var selectRelays = document.createElement("p");
+        selectRelays.innerText = "select relays";
+        selectRelays.onclick = function () {
+          // Implement what should happen when 'select relays' is clicked
+        };
+        dropdownContent.appendChild(selectRelays);
 
         wrapper.appendChild(dropdownContent); // append the dropdown content to the wrapper
         header.appendChild(wrapper); // append the wrapper to the header
@@ -709,10 +717,7 @@
         console.log(real_pubKey);
 
         // Generate options button for chat
-        var header = document.getElementsByTagName("header")[0];
-
-        var chatOptionsDropdown = createChatOptionsDropdown();
-        header.appendChild(chatOptionsDropdown);
+        createChatOptionsDropdown();
       };
       $(".send").onclick = () => {
         var msg = $(".msg").value;
