@@ -328,7 +328,7 @@
           div.appendChild(span1);
 
           if (div.classList.contains("peer-message")) {
-            var dropdown = createDropdown(msg, div, span1);
+            var dropdown = createMessageDropdown(msg, div, span1);
             div.appendChild(dropdown);
           }
 
@@ -350,7 +350,53 @@
         messageBox.scrollTop = messageBox.scrollHeight;
       };
 
-      var createDropdown = (msg, div, span1) => {
+      var createChatOptionsDropdown = () => {
+        const header = document.getElementsByTagName("header")[0];
+
+        var wrapper = document.createElement("div"); // create a new wrapper element
+        wrapper.className = "dropdown-wrapper"; // assign a class for the wrapper
+
+        var button = document.createElement("button");
+        button.className = "chat-options-button";
+        button.innerHTML = "...";
+        button.onclick = function () {
+          this.nextSibling.classList.toggle("show");
+        };
+        wrapper.appendChild(button); // append the button to the wrapper
+
+        var dropdownContent = document.createElement("div");
+        dropdownContent.className = "chat-dropdown-content";
+
+        var chatInfo = document.createElement("p");
+        chatInfo.innerText = "chat info";
+        chatInfo.onclick = function () {
+          let unique_pubkeys = [...new Set(real_messages.map((msg) => msg[1]))];
+          showModal(`${unique_pubkeys.length} unique npubs in this chat`);
+        };
+
+        dropdownContent.appendChild(chatInfo);
+
+        var copyChatString = document.createElement("p");
+        copyChatString.innerText = "copy chat string";
+        copyChatString.onclick = function () {
+          navigator.clipboard.writeText(shared_secret);
+        };
+        dropdownContent.appendChild(copyChatString);
+
+        var selectRelays = document.createElement("p");
+        selectRelays.innerText = "select relays";
+        selectRelays.onclick = function () {
+          // Implement what should happen when 'select relays' is clicked
+        };
+        dropdownContent.appendChild(selectRelays);
+
+        wrapper.appendChild(dropdownContent); // append the dropdown content to the wrapper
+        header.appendChild(wrapper); // append the wrapper to the header
+
+        return header;
+      };
+
+      var createMessageDropdown = (msg, div, span1) => {
         var wrapper = document.createElement("div");
         wrapper.className = "options-wrapper";
 
@@ -520,19 +566,6 @@
       }
 
       window.onload = async function () {
-        var chatStringForm = document.getElementById("chat-string-form");
-        var toggleButton = document.getElementById("toggle-chat-string");
-
-        toggleButton.onclick = function () {
-          if (chatStringForm.classList.contains("hidden")) {
-            chatStringForm.classList.remove("hidden");
-            toggleButton.innerText = "-";
-          } else {
-            chatStringForm.classList.add("hidden");
-            toggleButton.innerText = "+";
-          }
-        };
-
         if (window.nostr) {
           $(".nsec_div").classList.add("hidden");
           $(".gen_nsec").classList.add("hidden");
@@ -542,15 +575,20 @@
         }
 
         setBodyHeight();
-
-        loadChats(); // Load chat strings from localStorage
       };
     </script>
   </head>
   <body>
-    <h1>Pulsar</h1>
-    <button id="toggle-chat-string" class="toggle-button">+</button>
-    <div id="chat-string-form" class="chat_string hidden">
+    <header>
+      <div class="title-container">
+        <h1>Pulsar</h1>
+        <div class="lds-ripple">
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+    </header>
+    <div id="chat-string-form" class="chat_string">
       <p>Enter your generated chat string</p>
       <p><input class="shared_secret" /></p>
       <div class="nsec_div">
@@ -676,11 +714,6 @@
         $(".chat_string").classList.add("hidden");
         $(".messenger").classList.remove("hidden");
 
-        saveChat(shared_secret); // Save chat string to localStorage
-
-        // Enter messenger view
-        hideChatListAndCreation();
-
         if (window.nostr) return;
         nsec = $(".nsec").value;
         real_privKey = privkeyFromNsec(nsec);
@@ -688,6 +721,9 @@
           .getPublicKey(real_privKey, true)
           .substring(2);
         console.log(real_pubKey);
+
+        // Generate options button for chat
+        createChatOptionsDropdown();
       };
       $(".send").onclick = () => {
         var msg = $(".msg").value;
