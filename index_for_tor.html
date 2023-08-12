@@ -114,7 +114,7 @@
       function reconnectSocket(socket, relay) {
         console.log(`Reconnecting to ${relay}...`);
         const newSocket = new WebSocket(relay);
-        setupSocket(newSocket);
+        setupSocket(newSocket, relay);
         const index = sockets.indexOf(socket);
         if (index !== -1) {
           sockets[index] = newSocket;
@@ -123,7 +123,7 @@
         }
       }
 
-      function setupSocket(socket) {
+      function setupSocket(socket, relay) {
         socket.addEventListener("open", function () {
           openConnection();
         });
@@ -135,9 +135,13 @@
             ". Reconnect will be attempted.",
             e.reason
           );
-          setTimeout(() => {
-            reconnectSocket(socket, relay);
-          }, 1000);
+
+          // Only try reconnecting if the relay is still in the relays array.
+          if (relays.includes(relay)) {
+            setTimeout(() => {
+              reconnectSocket(socket, relay);
+            }, 1000);
+          }
         });
 
         socket.addEventListener("message", async function (message) {
@@ -407,6 +411,79 @@
         messageBox.scrollTop = messageBox.scrollHeight;
       };
 
+      function createRelayRow(relay) {
+        var relayRow = document.createElement("div");
+        relayRow.classList.add("relay-row");
+
+        var stateDisplay = document.createElement("span");
+        stateDisplay.classList.add("stateDisplay");
+
+        // Look for the socket associated with the relay and attach a listener
+        sockets.forEach((socket) => {
+          if (socket.url === relay) {
+            if (socket.readyState === 1) {
+              stateDisplay.classList.add("online");
+            } else {
+              stateDisplay.classList.add("offline");
+            }
+
+            // Listener to update the status when it changes
+            socket.addEventListener("open", () =>
+              stateDisplay.classList.replace("offline", "online")
+            );
+            socket.addEventListener("close", () =>
+              stateDisplay.classList.replace("online", "offline")
+            );
+          }
+        });
+        relayRow.appendChild(stateDisplay);
+
+        var relayText = document.createElement("p");
+        relayText.innerText = relay;
+        relayRow.appendChild(relayText);
+
+        var trashIcon = document.createElement("img");
+        trashIcon.classList.add("icon");
+        trashIcon.src = "assets/trash-icon.png";
+        trashIcon.width = 25;
+        trashIcon.height = 25;
+
+        trashIcon.onclick = function () {
+          let index = relays.indexOf(relay);
+          if (index > -1) {
+            relays.splice(index, 1);
+            localStorage.setItem("relays", JSON.stringify(relays));
+            relayRow.remove();
+          }
+        };
+
+        relayRow.appendChild(trashIcon);
+
+        return relayRow;
+      }
+
+      function updateSockets() {
+        // Close sockets that aren't in the relays array
+        sockets.forEach((socket) => {
+          if (!relays.includes(socket.url)) {
+            socket.close();
+            const index = sockets.indexOf(socket);
+            if (index !== -1) {
+              sockets.splice(index, 1);
+            }
+          }
+        });
+
+        // Open sockets for relays not in the sockets array
+        relays.forEach((relay) => {
+          if (!sockets.some((socket) => socket.url === relay)) {
+            const socket = new WebSocket(relay);
+            setupSocket(socket, relay);
+            sockets.push(socket);
+          }
+        });
+      }
+
       var createChatOptionsDropdown = () => {
         const header = document.getElementsByTagName("header")[0];
 
@@ -491,12 +568,51 @@
                 // Remove the relay row from the UI
                 relayRow.remove();
               }
+
+              updateSockets();
             };
 
             relayRow.appendChild(trashIcon);
 
             relayList.appendChild(relayRow);
           });
+          var addRelayWrapper = document.createElement("div");
+          addRelayWrapper.classList.add("add-relay-wrapper");
+
+          var relayInput = document.createElement("input");
+          relayInput.setAttribute("type", "text");
+          relayInput.setAttribute("placeholder", "Enter new relay");
+          relayInput.classList.add("relay-input");
+
+          var addRelayButton = document.createElement("button");
+          addRelayButton.setAttribute("id", "relay-button");
+          addRelayButton.innerText = "Add Relay";
+          addRelayButton.onclick = function () {
+            var newRelay = relayInput.value.trim();
+
+            if (newRelay && !relays.includes(newRelay)) {
+              relays.push(newRelay);
+
+              // Save updated relays back to localStorage
+              localStorage.setItem("relays", JSON.stringify(relays));
+
+              // Create a new WebSocket for the relay
+              const newSocket = new WebSocket(newRelay);
+              setupSocket(newSocket, newRelay);
+              sockets.push(newSocket);
+
+              // Add the new relay to the UI
+              var newRelayRow = createRelayRow(newRelay);
+              relayList.insertBefore(newRelayRow, addRelayWrapper);
+
+              // Clear input for next relay addition
+              relayInput.value = "";
+            }
+          };
+
+          addRelayWrapper.appendChild(relayInput);
+          addRelayWrapper.appendChild(addRelayButton);
+          relayList.appendChild(addRelayWrapper);
 
           showModal("", relayList);
         };

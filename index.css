@@ -107,6 +107,17 @@ button:hover {
   cursor: pointer;
 }
 
+#relay-button {
+  margin: 1% auto;
+  color: ghostwhite;
+  padding: 0.5rem 1rem;
+  border: 1px solid ghostwhite;
+  border-radius: 10px;
+  background-color: #0cbaba;
+  background-image: linear-gradient(315deg, #0cbaba 0%, #380036 74%);
+  cursor: pointer;
+}
+
 .chat-submit-button {
   margin-top: 2%;
   margin-bottom: 2%;
