@@ -20,11 +20,6 @@
       var url_keys = url_params.keys();
       var $_GET = {};
       for (var key of url_keys) $_GET[key] = url_params.get(key);
-      var relays = [
-        "wss://nostrue.com",
-        "wss://relay.damus.io",
-        "wss://nostr.uthark.com",
-      ];
     </script>
     <script>
       function bytesToHex(bytes) {
@@ -106,6 +101,29 @@
       <div class="magic_string"></div>
     </div>
     <script>
+      var relays;
+
+      var defaultRelays = [
+        "wss://nostrue.com/",
+        "wss://relay.damus.io/",
+        "wss://relay.plebstr.com/",
+        "wss://relay.nostr.band/",
+        "wss://relay.snort.social/",
+        "wss://nostr21.com/",
+        "wss://nostr.bitcoiner.social/",
+        "wss://nos.lol/",
+        "wss://relay.primal.net/",
+      ];
+
+      if (localStorage.getItem("relays")) {
+        relays = JSON.parse(localStorage.getItem("relays"));
+      } else {
+        console.log("elese");
+        relays = defaultRelays;
+
+        localStorage.setItem("relays", JSON.stringify(relays));
+      }
+
       var index =
         window.location.pathname.indexOf("onboard.htm") > -1
           ? window.location.pathname.indexOf("onboard.htm")

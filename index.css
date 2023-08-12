@@ -286,6 +286,13 @@ button:hover {
   opacity: 0.7;
 }
 
+.relay-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .show {
   display: block;
 }
@@ -320,6 +327,14 @@ button:hover {
 }
 
 .chat-dropdown-content p:hover {
+  opacity: 0.7;
+}
+
+.icon {
+  cursor: pointer;
+}
+
+.icon:hover {
   opacity: 0.7;
 }
 
@@ -367,6 +382,7 @@ button:hover {
   transform: translate(-50%, -50%);
   width: 100%;
   max-width: 560px;
+  max-height: 100vh;
   background-color: white;
   border-radius: 1rem;
   padding: 20px;
@@ -376,6 +392,27 @@ button:hover {
 }
 .modal * {
   color: black;
+}
+
+/* State display general styling */
+.stateDisplay {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%; /* make it circular */
+  margin-right: 5px; /* some space before the relay text */
+}
+
+/* Online state: green shining light */
+.online {
+  background-color: #4caf50; /* green */
+  box-shadow: 0 0 5px #4caf50, /* outer glow */ 0 0 10px #4caf50; /* more outer glow */
+}
+
+/* Offline state: red shining light */
+.offline {
+  background-color: #f44336; /* red */
+  box-shadow: 0 0 5px #f44336, /* outer glow */ 0 0 10px #f44336; /* more outer glow */
 }
 
 @media screen and (max-width: 600px) {

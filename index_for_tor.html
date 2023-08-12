@@ -97,77 +97,134 @@
       var shared_pub = null;
       var real_privKey = null;
       var real_pubKey = null;
-      // var nsec = 'nsec13qd2fgv8f6kdvmm3qshahuptgkkukqagnzwqurphy9kp5zxst37ss3dt74';
-      // var nsec = prompt( "Please enter your nsec" );
-      // var nsec = null;
-      // var real_privKey = privkeyFromNsec( nsec );
-      // var real_pubKey = nobleSecp256k1.getPublicKey( real_privKey, true ).substring( 2 );
       var keypair = null;
       var privKey = null;
       var pubKey = null;
-      var relay = "wss://nostrue.com";
-      var socket = new WebSocket(relay);
-      socket.addEventListener("message", async function (message) {
-        var [type, subId, event] = JSON.parse(message.data);
-        var { kind, content } = event || {};
-        if (!event || event === true) return;
-        // console.log('message:', event);
-        // if (kind === 4) {
-        //     content = await decrypt(shared_secret, event.pubkey, content);
-        // }
-        var real_msg = await detectRealMessage(event);
-        if (displayed_msgs.includes(event.id)) return;
-        displayed_msgs.push(event.id);
-        if (real_msg[0]) real_messages.push(real_msg);
-        if (real_msg[0]) populateRealMessages();
-        if (!subId.startsWith("00000001")) return;
-        num_of_messages = num_of_messages + 1;
-        timestamp_of_oldest_message = event.created_at;
-        if (num_of_messages < 45) return;
-        console.log("going up");
-        num_of_messages = 0;
-        var subId =
-          "00000001" +
-          bitcoinjs.ECPair.makeRandom()
-            .privateKey.toString("hex")
-            .substring(0, 8);
-        var filter = {
-          "#p": [shared_pub],
-          until: timestamp_of_oldest_message,
-          limit: 50,
-        };
-        var subscription = ["REQ", subId, filter];
-        socket.send(JSON.stringify(subscription));
+
+      relays = JSON.parse(localStorage.getItem("relays"));
+
+      var sockets = [];
+
+      relays.forEach((relay) => {
+        const socket = new WebSocket(relay);
+        setupSocket(socket, relay);
+        sockets.push(socket);
       });
 
-      async function openConnection(e) {
-        if (!shared_pub) {
-          await waitSomeSeconds(1);
-          openConnection(e);
-          return;
+      function reconnectSocket(socket, relay) {
+        console.log(`Reconnecting to ${relay}...`);
+        const newSocket = new WebSocket(relay);
+        setupSocket(newSocket);
+        const index = sockets.indexOf(socket);
+        if (index !== -1) {
+          sockets[index] = newSocket;
+        } else {
+          sockets.push(newSocket);
         }
-        console.log("connected to " + relay);
-        var now = Math.floor(Date.now() / 1000);
-        var subId =
-          "00000000" +
-          bitcoinjs.ECPair.makeRandom()
-            .privateKey.toString("hex")
-            .substring(0, 8);
-        var filter = { "#p": [shared_pub], since: now };
-        var subscription = ["REQ", subId, filter];
-        socket.send(JSON.stringify(subscription));
-        var subId =
-          "00000001" +
-          bitcoinjs.ECPair.makeRandom()
-            .privateKey.toString("hex")
-            .substring(0, 8);
-        var filter = { "#p": [shared_pub], until: now, limit: 50 };
-        var subscription = ["REQ", subId, filter];
-        socket.send(JSON.stringify(subscription));
-        setTimeout(messageMaker, 3000);
       }
 
-      socket.addEventListener("open", openConnection);
+      function setupSocket(socket) {
+        socket.addEventListener("open", function () {
+          openConnection();
+        });
+
+        socket.addEventListener("close", function (e) {
+          console.log(
+            "Socket is closed for",
+            relay,
+            ". Reconnect will be attempted.",
+            e.reason
+          );
+          setTimeout(() => {
+            reconnectSocket(socket, relay);
+          }, 1000);
+        });
+
+        socket.addEventListener("message", async function (message) {
+          var [type, subId, event] = JSON.parse(message.data);
+          var { kind, content } = event || {};
+          if (!event || event === true) return;
+          var real_msg = await detectRealMessage(event);
+          if (displayed_msgs.includes(event.id)) return;
+          displayed_msgs.push(event.id);
+          if (real_msg[0]) real_messages.push(real_msg);
+          if (real_msg[0]) populateRealMessages();
+          if (!subId.startsWith("00000001")) return;
+          num_of_messages = num_of_messages + 1;
+          timestamp_of_oldest_message = event.created_at;
+          if (num_of_messages < 45) return;
+          num_of_messages = 0;
+          var subId =
+            "00000001" +
+            bitcoinjs.ECPair.makeRandom()
+              .privateKey.toString("hex")
+              .substring(0, 8);
+          var filter = {
+            "#p": [shared_pub],
+            until: timestamp_of_oldest_message,
+            limit: 50,
+          };
+          var subscription = ["REQ", subId, filter];
+          if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify(subscription));
+          }
+          socket.addEventListener("close", (e) => {
+            console.log(
+              "Socket is closed. Reconnect will be attempted.",
+              e.reason
+            );
+            setTimeout(() => {
+              reconnectSocket(socket, relay);
+            }, 1000);
+          });
+        });
+
+        async function openConnection(e) {
+          if (!shared_pub) {
+            await waitSomeSeconds(1);
+            openConnection(e);
+            return;
+          }
+          var now = Math.floor(Date.now() / 1000);
+          var subId =
+            "00000000" +
+            bitcoinjs.ECPair.makeRandom()
+              .privateKey.toString("hex")
+              .substring(0, 8);
+          var filter = { "#p": [shared_pub], since: now };
+          var subscription = ["REQ", subId, filter];
+          if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify(subscription));
+          }
+          var subId =
+            "00000001" +
+            bitcoinjs.ECPair.makeRandom()
+              .privateKey.toString("hex")
+              .substring(0, 8);
+          var filter = { "#p": [shared_pub], until: now, limit: 50 };
+          var subscription = ["REQ", subId, filter];
+          if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify(subscription));
+          }
+          setTimeout(messageMaker, 3000);
+        }
+
+        socket.addEventListener("open", openConnection);
+
+        socket.addEventListener("close", (e) => {
+          console.log(
+            "Socket is closed. Reconnect will be attempted.",
+            e.reason
+          );
+          setTimeout(() => {
+            // Reconnect logic here.
+          }, 1000);
+        });
+      }
+
+      sockets.forEach(function (socket) {
+        setupSocket(socket);
+      });
 
       async function getSignedEvent(event, privateKey) {
         var eventData = JSON.stringify([
@@ -385,9 +442,65 @@
 
         var selectRelays = document.createElement("p");
         selectRelays.innerText = "select relays";
+        var relayList;
         selectRelays.onclick = function () {
-          // Implement what should happen when 'select relays' is clicked
+          var chatDropdown = document.getElementsByClassName(
+            "chat-dropdown-content"
+          )[0];
+          chatDropdown.classList.remove("show");
+
+          relayList = document.createElement("div");
+          relayList.classList.add("relay-list");
+
+          relays.forEach((relay) => {
+            var relayRow = document.createElement("div");
+            relayRow.classList.add("relay-row");
+
+            var stateDisplay = document.createElement("span");
+            stateDisplay.classList.add("stateDisplay");
+            sockets.forEach((socket) => {
+              if (socket.url === relay) {
+                if (socket.readyState === 1) {
+                  stateDisplay.classList.add("online");
+                } else {
+                  stateDisplay.classList.add("offline");
+                }
+              }
+            });
+            relayRow.appendChild(stateDisplay);
+
+            var relayText = document.createElement("p");
+            relayText.innerText = relay;
+            relayRow.appendChild(relayText);
+
+            var trashIcon = document.createElement("img");
+            trashIcon.classList.add("icon");
+            trashIcon.src = "assets/trash-icon.png";
+            trashIcon.width = 25;
+            trashIcon.height = 25;
+
+            trashIcon.onclick = function () {
+              // Remove relay from relays array
+              let index = relays.indexOf(relay);
+              if (index > -1) {
+                relays.splice(index, 1);
+
+                // Save updated relays back to localStorage
+                localStorage.setItem("relays", JSON.stringify(relays));
+
+                // Remove the relay row from the UI
+                relayRow.remove();
+              }
+            };
+
+            relayRow.appendChild(trashIcon);
+
+            relayList.appendChild(relayRow);
+          });
+
+          showModal("", relayList);
         };
+
         dropdownContent.appendChild(selectRelays);
 
         wrapper.appendChild(dropdownContent); // append the dropdown content to the wrapper
@@ -534,22 +647,42 @@
         $(".black-bg").style.display = "none";
         $(".modal").style.display = "none";
       }
-      function showModal(content) {
+      function showModal(content, additionalHTML) {
         $(
           ".modal"
-        ).innerHTML = `<div style="position: absolute;right: 1rem;top: 0.5rem;font-size: 2rem; cursor: pointer; color: black;" onclick="modalVanish()">&times;</div>`;
+        ).innerHTML = `<div style="position: absolute; right: 1rem; top: 0.5rem; font-size: 2rem; cursor: pointer; color: black;" onclick="modalVanish()">&times;</div>`;
         $(
           ".modal"
         ).innerHTML += `<div style="overflow-y: scroll; max-height: 80vh; margin-top: 1.5rem;">${content}</div>`;
+
+        if (additionalHTML) {
+          $(".modal").appendChild(additionalHTML);
+        }
+
         $(".black-bg").style.display = "block";
         $(".modal").style.display = "block";
       }
 
       window.onclick = function (event) {
-        if (!event.target.matches(".options-button")) {
+        if (
+          !event.target.matches(".chat-options-button") &&
+          !event.target.matches(".options-button") &&
+          !event.target.closest(".dropdown-wrapper") &&
+          !event.target.closest(".options-wrapper")
+        ) {
           var dropdowns = document.getElementsByClassName("dropdown-content");
           for (var i = 0; i < dropdowns.length; i++) {
             var openDropdown = dropdowns[i];
+            if (openDropdown.classList.contains("show")) {
+              openDropdown.classList.remove("show");
+            }
+          }
+
+          var chatDropdowns = document.getElementsByClassName(
+            "chat-dropdown-content"
+          );
+          for (var i = 0; i < chatDropdowns.length; i++) {
+            var openDropdown = chatDropdowns[i];
             if (openDropdown.classList.contains("show")) {
               openDropdown.classList.remove("show");
             }
@@ -686,7 +819,11 @@
         };
         var publishable_signed_event = await getSignedEvent(event, privKey);
         if (!once)
-          socket.send(JSON.stringify(["EVENT", publishable_signed_event]));
+          sockets.forEach((socket) => {
+            if (socket.readyState === WebSocket.OPEN) {
+              socket.send(JSON.stringify(["EVENT", publishable_signed_event]));
+            }
+          });
         if (original_message) {
           var real_msg = await detectRealMessage(event);
         } else {
