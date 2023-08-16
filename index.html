@@ -499,7 +499,19 @@
         chatInfo.innerText = "chat info";
         chatInfo.onclick = function () {
           let unique_pubkeys = [...new Set(real_messages.map((msg) => msg[1]))];
-          showModal(`${unique_pubkeys.length} unique npubs in this chat`);
+          let oldestMessageTimestamp = Math.min(
+            ...real_messages.map((msg) => msg[2])
+          );
+          let startDate = new Date(
+            oldestMessageTimestamp * 1000
+          ).toLocaleDateString();
+
+          var startDateText = document.createElement("p");
+          startDateText.innerText = `Chat started on: ${startDate}`;
+          showModal(
+            `${unique_pubkeys.length} unique npubs in this chat`,
+            startDateText
+          );
         };
 
         dropdownContent.appendChild(chatInfo);
