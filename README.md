@@ -44,8 +44,10 @@ Also, the shared secret allows any number of people to use Pulsar to communicate
 
 (3) Observers can detect when someone starts sending messages to a group and when they stop. For example, if they observe that there were 6 messages going to the group every 3 seconds, but then suddenly there are 7, that probably means a new person entered the group
 
-(4) Observers can treat the time period during which someone is sending messages to a group as a "session." They can detect the duration of each session and track its start and stop times to identify the likeliest time zones that every group member lives in. So observers might not know who you are, but they might can get a good idea of what time zone you live in
+(4) Observers can treat the time period during which someone is sending messages to a group as a "session." They can detect the duration of each session and track its start and stop times to identify the likeliest time zones that every group member lives in. So observers might not know who you are, but they might get a good idea of what time zone you live in
 
 (5) Because each session sends a message every 3 seconds, and never varies from that, observers can get an upper bound on the number of messages you sent during your session. E.g. if your session lasted 1 hour, they know that there are 3600 seconds in 1 hour, meaning your client sent a total of 1200 messages during your session. They know that most of those messages were probably junk messages, but some of them could have been real. So the maximum number of real messages you could have sent during your session is 1200 -- that's the "upper bound." Note that this would only give them an upper bound on how many real messages you *could* have sent during your session. It would not tell them the *actual* number of real messages you sent
 
 (6) Observers who control one of the relays users connect to can additionally see when websocket connections are opened and closed, and treat those as additional data points about when people log in and log out
+
+(7) If the tor network is compromised, e.g. if feds are running most of the nodes and logging all ip traffic, there is a meaningful chance they can identify your ip address and thus figure out who you are, and learn what chat groups you are in
