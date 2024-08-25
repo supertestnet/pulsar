@@ -50,4 +50,4 @@ Also, the shared secret allows any number of people to use Pulsar to communicate
 
 (6) Observers who control one of the relays users connect to can additionally see when websocket connections are opened and closed, and treat those as additional data points about when people log in and log out
 
-(7) If the tor network is compromised, e.g. if feds are running most of the nodes and logging all ip traffic, there is a meaningful chance they can identify your ip address and thus figure out who you are, and learn what chat groups you are in
+(7) If the tor network is compromised, e.g. if feds are running most of the nodes and logging all ip traffic, there is a meaningful chance they can identify your ip address and, through that, your real identity. Global surveillance of this sort can probably also figure out what relays you are talking to, and map that info to what group chats are ongoing, so that they can perhaps learn what chat groups you are in
